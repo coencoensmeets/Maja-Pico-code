@@ -1,0 +1,64 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment variables and virtual environment
+.env
+*.env
+venv/
+ENV/
+.venv/
+env/
+.env.*
+
+# Flask-specific files
+instance/
+config.py
+settings.py
+
+# Logs and debugging files
+*.log
+*.out
+*.err
+
+# Test coverage and reports
+.coverage
+coverage.xml
+*.cover
+*.py,cover
+htmlcov/
+
+# Pytest and unit test artifacts
+.cache/
+*.pytest_cache/
+.tox/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE and editor settings
+.vscode/
+.idea/
+
+# Compiled libraries
+*.so
+*.dll
+*.dylib
+
+# Docker
+docker-compose.override.yml
+.env.docker
+
+# Other
+*.bak
+*.swp
+*.tmp
+
+
+#Secrets
+secrets.py
