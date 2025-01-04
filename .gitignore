@@ -22,6 +22,9 @@ settings.py
 *.out
 *.err
 
+#micropico
+*.micropico
+
 # Test coverage and reports
 .coverage
 coverage.xml
