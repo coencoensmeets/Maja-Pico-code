@@ -191,7 +191,7 @@ class State():
 		self.__animator = StatusAnimator()
 		self.__current_status = {'x': SCREEN_SIZE[0]//2, 'y': SCREEN_SIZE[1]//2,
 								'eye_open': 0.1, 'eyebrow_angle': 0, 'under_eye_lid': 0.4, 'left_right': 0, 
-						   		'mouth_width': 40, 'mouth_y':0, 'smile': 0, 'cheeks': 0,
+						   		'mouth_width': 40, 'mouth_y':0, 'smile': 0, 'cheeks': 0, 'smirk': 0,
 								"hue": 0, "saturation": 1, "value": 0}
 		
 		self.__particles_queue = Particle_Queue()
