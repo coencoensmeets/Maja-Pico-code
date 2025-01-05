@@ -93,7 +93,6 @@ class Screen():
 			self.__draw_cheeks(status)
 			
 		if len(particles)>0:
-	
 			self.__draw_particles(particles)
 
 		# gc.collect()
@@ -102,7 +101,6 @@ class Screen():
 			# print(f"Bitmap: {len(self.bitmap['BOUNDING'])}")
 			if len(self.bitmap['BOUNDING']) > 0:
 				self.tft.pbitmap(self.bitmap, 1)
-			
 				Count += 1
 		except Exception as e:
 			print(f"Error during drawing ({gc.mem_free()}): {e}")
@@ -115,10 +113,9 @@ class Screen():
 		under_y = self.eye_height-status['under_eye_lid']*self.eye_height/2
 
 		if (status['eye_open']>0):
-
 			height_eye = under_y-status['eye_open']*(self.eye_height-status['under_eye_lid']*self.eye_height/2)
 			rounded_corners = round(min((under_y-height_eye)/2,15))
-			angle_eyebrow = max(min((1-max(under_y-height_eye,(rounded_corners*2+1))/(rounded_corners*1.5+1))*status['eyebrow_angle']/2,1),-1)
+			angle_eyebrow = min(max((under_y-height_eye-2*rounded_corners)/(1-10/45),0),45)/45*-status['eyebrow_angle']
 
 			left_eye_coord = [	(0, round(max(height_eye+max(angle_eyebrow*45,0), -min(status['left_right'], 0)*self.eye_height/2))), 
 					(self.eye_width, round(max(height_eye+max(-angle_eyebrow*45,0), -min(status['left_right'], 0)*self.eye_height/2))), 
