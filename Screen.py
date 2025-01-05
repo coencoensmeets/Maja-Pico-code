@@ -86,7 +86,7 @@ class Screen():
 			self.__draw_eyes(status)
 	
 			
-		if True or any(key in ['x', 'y', 'mouth_width', 'mouth_y', 'smile'] for key in newstatus.keys()):
+		if True or any(key in ['x', 'y', 'mouth_width', 'mouth_y', 'smile', 'smirk'] for key in newstatus.keys()):
 			self.__draw_mouth(status)
 
 		if True or any('cheeks' in newstatus.keys()):
@@ -145,18 +145,20 @@ class Screen():
 			self.__bounding['right_eye'] = [calculate_bound(right_eye_coord, offset = ((status['x']+45)-self.eye_width//2,(status['y']-65)))]
 			
 	def __draw_mouth(self, status):
-		corners_upper = round(min(status['mouth_width']/2,max(10-status['smile']*10,0)))
-		corners_lower = round(min(status['mouth_width']/2,max(10+status['smile']*10,0)))
+		mouth_coord = [(round(self.mouth_width//2-(status['mouth_width']//2)*(1-status['smirk']*0.5)), round(status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.5)), round(status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.5)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2-status['mouth_width']//2*(1-status['smirk']*0.5)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2))]
+		
+		mouth_radii = [round(min(status['mouth_width']/2,max(self.mouth_height//4-(status['smile']*self.mouth_height//4)*(1-status['smirk']),0))),
+				round(min(status['mouth_width']/2,max(self.mouth_height//4-status['smile']*self.mouth_height//4*(1+status['smirk']),0))),
+				round(min(status['mouth_width']/2,max(self.mouth_height//4+status['smile']*self.mouth_height//4*(1+min(status['smirk'],0))-max(status['smirk'],0),0))), 
+				round(min(status['mouth_width']/2,max(self.mouth_height//4+status['smile']*self.mouth_height//4*(1-max(status['smirk'],0))+min(status['smirk'],0),0)))]
 
-		mouth_coord = [(round(self.mouth_width//2-status['mouth_width']//2), round(status['mouth_y']*20)), 
-				 (round(self.mouth_width//2+status['mouth_width']//2), round(status['mouth_y']*20)), 
-				 (round(self.mouth_width//2+status['mouth_width']//2), round(20+status['mouth_y']*20)), 
-				 (round(self.mouth_width//2-status['mouth_width']//2), round(20+status['mouth_y']*20))]
-		
-		
 		self.__screen_drawer.draw_polygon_rounded((round(status['x']-self.mouth_width//2), status['y']+45),
 				mouth_coord, 
-				[corners_upper, corners_upper, corners_lower, corners_lower], 1, key='mouth')
+				mouth_radii, 
+				1, key='mouth')
 		
 		self.__bounding['mouth'] = [calculate_bound(mouth_coord, offset=(round(status['x']-self.mouth_width//2), status['y']+45))]
 
