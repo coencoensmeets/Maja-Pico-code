@@ -195,7 +195,6 @@ class AnimationBank():
 		if left_right is None:
 			left_right = random.choice([-1,1])
 
-		print(f"Winking {left_right}")
 		State.trigger_animation({'left_right': left_right}, 300, Time_Profiles.ease_in, dont_lock=True)
 		State.trigger_animation({'left_right': 0}, 300, Time_Profiles.ease_out, dont_lock=True)
 
@@ -233,7 +232,6 @@ class AnimationBank():
 
 	@staticmethod
 	def kiss(State):
-		print(f"Final time: {State.get_final_time()}")
 		saved_state = State.get_final_state(dont_lock=True)
 		heart = Heart((saved_state['x'], saved_state['y']+45, pi/4))
 		heart.scale(0.75)
@@ -473,8 +471,7 @@ class Love(Emotion):
 		self.triggers['background'].change_function = lambda t: 10**(-2.8)*t**2
 
 	def _trigger_background(self):
-		# Options = {'fast_blinking': 0.2, 'wink': 0.2, 'kiss': 0.25, 'shake_yes': 0.1, 'dance': 0.1, 'hearts_flying': 0.25}
-		Options = {'wink': 1.0}
+		Options = {'fast_blinking': 0.2, 'wink': 0.2, 'kiss': 0.25, 'shake_yes': 0.1, 'dance': 0.1, 'hearts_flying': 0.25}
 		choice = weighted_choice(list(Options.keys()), weights=Options.values())
 
 		print(f"Happy background animation: {choice}")

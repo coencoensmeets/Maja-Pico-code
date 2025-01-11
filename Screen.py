@@ -116,9 +116,6 @@ class Screen():
 		gc.collect()
 		under_y = self.eye_height-status['under_eye_lid']*self.eye_height/2
 
-		if (status['left_right']!=0):
-			print(f"Left right: {status['left_right']}")
-
 		if (status['eye_open']>0):
 			height_eye = under_y-status['eye_open']*(self.eye_height-status['under_eye_lid']*self.eye_height/2)
 			rounded_corners = round(min((under_y-height_eye)/2,15))
