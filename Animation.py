@@ -187,15 +187,17 @@ class AnimationBank():
 	@staticmethod
 	def blink(State):
 		saved_state = State.get_final_state(dont_lock=True)
-		State.trigger_animation({'eye_open': 0.0}, 200, Time_Profiles.ease_in, dont_lock=True)
-		State.trigger_animation({'eye_open': saved_state['eye_open']}, 200, Time_Profiles.ease_out, dont_lock=True)
+		State.trigger_animation({'eye_open': 0.0}, 300, Time_Profiles.ease_in, dont_lock=True)
+		State.trigger_animation({'eye_open': saved_state['eye_open']}, 300, Time_Profiles.ease_out, dont_lock=True)
 
 	@staticmethod
 	def wink(State, left_right:int=None):
 		if left_right is None:
 			left_right = random.choice([-1,1])
-		State.trigger_animation({'left_right': left_right}, 200, Time_Profiles.ease_in, dont_lock=True)
-		State.trigger_animation({'left_right': 0}, 200, Time_Profiles.ease_out, dont_lock=True)
+
+		print(f"Winking {left_right}")
+		State.trigger_animation({'left_right': left_right}, 300, Time_Profiles.ease_in, dont_lock=True)
+		State.trigger_animation({'left_right': 0}, 300, Time_Profiles.ease_out, dont_lock=True)
 
 	@staticmethod
 	def shake_yes(State, amount=None):
@@ -471,7 +473,8 @@ class Love(Emotion):
 		self.triggers['background'].change_function = lambda t: 10**(-2.8)*t**2
 
 	def _trigger_background(self):
-		Options = {'fast_blinking': 0.2, 'wink': 0.2, 'kiss': 0.25, 'shake_yes': 0.1, 'dance': 0.1, 'hearts_flying': 0.25}
+		# Options = {'fast_blinking': 0.2, 'wink': 0.2, 'kiss': 0.25, 'shake_yes': 0.1, 'dance': 0.1, 'hearts_flying': 0.25}
+		Options = {'wink': 1.0}
 		choice = weighted_choice(list(Options.keys()), weights=Options.values())
 
 		print(f"Happy background animation: {choice}")
