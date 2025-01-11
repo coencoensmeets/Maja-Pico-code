@@ -272,7 +272,8 @@ class State():
 			self.__animator.reset_queue()
 
 	def check_animation_triggers(self):
-		self.Emotion.emotion.check_triggers()
+		if (self.face.is_on):
+			self.Emotion.emotion.check_triggers()
 
 	def get_current_state(self, dont_lock=False):
 		"""

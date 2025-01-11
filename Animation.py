@@ -187,16 +187,16 @@ class AnimationBank():
 	@staticmethod
 	def blink(State):
 		saved_state = State.get_final_state(dont_lock=True)
-		State.trigger_animation({'eye_open': 0.0}, 300, Time_Profiles.ease_in, dont_lock=True)
-		State.trigger_animation({'eye_open': saved_state['eye_open']}, 300, Time_Profiles.ease_out, dont_lock=True)
+		State.trigger_animation({'eye_open': 0.0}, 200, Time_Profiles.ease_in, dont_lock=True)
+		State.trigger_animation({'eye_open': saved_state['eye_open']}, 200, Time_Profiles.ease_out, dont_lock=True)
 
 	@staticmethod
 	def wink(State, left_right:int=None):
 		if left_right is None:
 			left_right = random.choice([-1,1])
 
-		State.trigger_animation({'left_right': left_right}, 300, Time_Profiles.ease_in, dont_lock=True)
-		State.trigger_animation({'left_right': 0}, 300, Time_Profiles.ease_out, dont_lock=True)
+		State.trigger_animation({'left_right': left_right}, 250, Time_Profiles.ease_in, dont_lock=True)
+		State.trigger_animation({'left_right': 0}, 250, Time_Profiles.ease_out, dont_lock=True)
 
 	@staticmethod
 	def shake_yes(State, amount=None):
