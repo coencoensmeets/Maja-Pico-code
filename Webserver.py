@@ -310,7 +310,7 @@ class Local_Server():
 			request = str(request)
 			print(f"Content = {request}")
 
-			start = request.find('?apply=') + len('?apply=')
+			start = request.find('?input=') + len('?input=')
 			end = request.find('?end')
 			if start == -1 or end == -1:
 				self.show_page(conn, html_fail)
@@ -318,7 +318,8 @@ class Local_Server():
 				json_string = request[start:end]
 				print(f"json_string: {json_string}")
 				try:
-					json_dict = json.loads(json_string.replace("%22", '"'))
+					print(json_string.replace("%22", '"').replace("%20", ""))
+					json_dict = json.loads(json_string.replace("%22", '"').replace("%20", ""))
 				except ValueError:
 					json_dict = None
 
