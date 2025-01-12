@@ -12,10 +12,9 @@ from Light import Lights
 from Timers import WatchDog, Periodic
 from State import State, StateSync, Emotion_Manager
 from TimeProfiles import Time_Profiles
-from Webserver import Webserver
+from Webserver import Webserver, Secrets, Local_Server
 
 import tft_config
-from secrets import USER_ID, SSID, PASSWORD
 
 TOGGLE_TIME = 1500
 
@@ -50,6 +49,12 @@ class main_system():
 		self.WD = WatchDog(30e3, stop_routine=self.stop_routine)
 
 		gc.collect()
+		USER_ID, SSID, PASSWORD = Secrets().get_secrets()
+		if None in (USER_ID, SSID, PASSWORD):
+			print("No secrets found! Using local server!")
+			self.state.load_state(reset=False)
+			self.state.draw_state()
+			Local_Server(self.LEDS)
 		self.ws = Webserver(user_id=USER_ID, ssid = SSID, password=PASSWORD, base = "https://thomasbendington.pythonanywhere.com")
 
 		self.state_sync = StateSync(USER_ID, self.LEDS, self.state)
@@ -109,8 +114,6 @@ class main_system():
 				pass
 			print("\nRebooting turned on!\n")
 
-		print(micropython.mem_info(1))
-
 		print("Startup complete!\n----------------\n")
 
 	def __still_up(self):
@@ -160,7 +163,10 @@ class main_system():
 			elif touch_state['right'] == -2: #State: Change brightness (Double tap right)
 				self.state.face.screen_toggle()
 				self.state_sync.queue.add({'screen_on': 0})
-			elif touch_state['right'] > 3000: #State: Reset (Coding) (Hold left)
+			elif touch_state['right'] == -5: #State: Reset (Coding) (Hold left)
+				Secrets().reset_secrets()
+				print(f"Secrets reset! Restarting in 2s")
+				time.sleep(2)
 				self.WD.kill()
 
 			elif touch_state['left'] == -5: #State: Reset (Double tap left)
@@ -243,5 +249,5 @@ class main_system():
 		print("Memory free:", gc.mem_free(), "bytes")
 
 if __name__ == '__main__':
-	system = main_system(safety_switch=False)
+	system = main_system(safety_switch=True)
 	system.start_threads()
