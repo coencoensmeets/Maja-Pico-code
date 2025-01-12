@@ -52,6 +52,8 @@ class main_system():
 		USER_ID, SSID, PASSWORD = Secrets().get_secrets()
 		if None in (USER_ID, SSID, PASSWORD):
 			print("No secrets found! Using local server!")
+			self.state.load_state(reset=False)
+			self.state.draw_state()
 			Local_Server(self.LEDS)
 		self.ws = Webserver(user_id=USER_ID, ssid = SSID, password=PASSWORD, base = "https://thomasbendington.pythonanywhere.com")
 
