@@ -194,8 +194,9 @@ class AnimationBank():
 	def wink(State, left_right:int=None):
 		if left_right is None:
 			left_right = random.choice([-1,1])
-		State.trigger_animation({'left_right': left_right}, 200, Time_Profiles.ease_in, dont_lock=True)
-		State.trigger_animation({'left_right': 0}, 200, Time_Profiles.ease_out, dont_lock=True)
+
+		State.trigger_animation({'left_right': left_right}, 250, Time_Profiles.ease_in, dont_lock=True)
+		State.trigger_animation({'left_right': 0}, 250, Time_Profiles.ease_out, dont_lock=True)
 
 	@staticmethod
 	def shake_yes(State, amount=None):
@@ -231,7 +232,6 @@ class AnimationBank():
 
 	@staticmethod
 	def kiss(State):
-		print(f"Final time: {State.get_final_time()}")
 		saved_state = State.get_final_state(dont_lock=True)
 		heart = Heart((saved_state['x'], saved_state['y']+45, pi/4))
 		heart.scale(0.75)

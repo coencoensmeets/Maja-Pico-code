@@ -63,7 +63,11 @@ class Screen():
 
 	def draw_face(self, newstatus, status, particles):
 		Count = 0
-		if not self.__make_black and len(particles) == 0 and not any(key in newstatus.keys() for key in ['left_eye', 'right_eye', 'mouth', 'x', 'y', 'eye_open', 'eyebrow_angle', 'under_eye_lid', 'mouth_width', 'mouth_y', 'smile', 'cheeks']):
+		if (not self.__make_black and 
+				len(particles) == 0 and 
+				not any(key in newstatus.keys() for key in ['left_eye', 'right_eye', 'mouth', 'x', 'y', 
+															'eye_open', 'left_right', 'eyebrow_angle', 'under_eye_lid', 
+															'mouth_width', 'mouth_y', 'smile', 'cheeks'])):
 			return
 
 		# todo: The face is always updated. Not only when the face changes. This is not optimal.
@@ -82,7 +86,7 @@ class Screen():
 			self.__screen_drawer.draw_circle((SCREEN_SIZE[0]//2, SCREEN_SIZE[1]//2), SCREEN_SIZE[0]//2, 0, key='black')
 			self.__make_black = False
 
-		if True or any(key in ['eye_open', 'eyebrow_angle', 'under_eye_lid', 'x', 'y'] for key in newstatus.keys()):
+		if True or any(key in ['eye_open', 'eyebrow_angle', 'under_eye_lid', 'left_right', 'x', 'y'] for key in newstatus.keys()):
 			self.__draw_eyes(status)
 	
 			
@@ -124,10 +128,10 @@ class Screen():
 
 			self.__screen_drawer.draw_polygon_rounded(((status['x']-45)-self.eye_width//2,(status['y']-65)), 
 				left_eye_coord, 
-				[	int(max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)),
-	 				round(max(rounded_corners-abs(min(angle_eyebrow*15,10)),0)), 
-					rounded_corners, 
-					rounded_corners], 
+				[	int(max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)*(min((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)),
+	 				int(max(rounded_corners-abs(min(angle_eyebrow*15,10)),0)*(min((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)), 
+					int(rounded_corners*(min((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)), 
+					int(rounded_corners*(min((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1))], 
 					1, key='left_eye')
 
 			self.__bounding['left_eye'] = [calculate_bound(left_eye_coord, offset = ((status['x']-45)-self.eye_width//2,(status['y']-65)))]
@@ -139,8 +143,11 @@ class Screen():
 			
 			self.__screen_drawer.draw_polygon_rounded(((status['x']+45)-self.eye_width//2,(status['y']-65)),
 				right_eye_coord, 
-				[int(max(rounded_corners-abs(min(angle_eyebrow*15,10)),0)),round(max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)), 
-					rounded_corners, rounded_corners], 1, key='right_eye')
+				[int(max(rounded_corners-abs(min(angle_eyebrow*15,10)),0)*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)),
+	 			int(max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)), 
+					int(rounded_corners*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)), 
+					int(rounded_corners*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1))], 
+					1, key='right_eye')
 			
 			self.__bounding['right_eye'] = [calculate_bound(right_eye_coord, offset = ((status['x']+45)-self.eye_width//2,(status['y']-65)))]
 			
