@@ -180,7 +180,7 @@ class main_system():
 			# if (ticks_diff(ticks_ms(), t_start) > 20):
 			# 	print(f"Time taken (Sensor loop): {ticks_diff(ticks_ms(), t_start)}")
 
-		print("Sensor Thread Stopped!\nKilling all threads!")
+		print("Sensor thread is going to kill the server thread!")
 		self.WD.kill()
 
 	def __server_thread(self):
