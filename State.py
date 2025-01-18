@@ -97,7 +97,7 @@ class StateSync():
 			self.__block_get = block
 
 	def get(self, webserver):
-		result = webserver.get("all")
+		result = webserver.get("all/maja")
 		with self.__lock:
 			if not self.queue.check() and not self.__block_get:
 				success_value = result.get('success')
@@ -130,14 +130,14 @@ class StateSync():
 						'saturation': current_state['saturation'],
 						'value': current_state['value']
 					}
-					result = webserver.post("light", send)
+					result = webserver.post("light/maja", send)
 					success_value = success_value and result.get('success', False)
 				
 				if (key in ['screen_on'] for key in queue_item.keys()):
 					send = {
 						'screen_on': self.state.face.is_on
 					}
-					result = webserver.post("screen", send)
+					result = webserver.post("screen/maja", send)
 					success_value = success_value and result.get('success', False)
 				
 				if success_value == False and self.__post_retry_count < 5:
