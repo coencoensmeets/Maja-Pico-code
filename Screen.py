@@ -125,13 +125,16 @@ class Screen():
 					(self.eye_width, round(max(height_eye+max(-angle_eyebrow*45,0), -min(status['left_right'], 0)*self.eye_height/2))), 
 					(self.eye_width, round(min(under_y, self.eye_height+min(status['left_right'], 0)*self.eye_height/2))), 
 					(0, round(min(under_y, self.eye_height+min(status['left_right'], 0)*self.eye_height/2)))]
+			
+			print(f"Left eye rounded: {(min(status['left_right'],0)-0.5)**2+(min(status['left_right'],0)-0.5)+0.25}")
+			print(f"Rounded: {max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)}")
 
 			self.__screen_drawer.draw_polygon_rounded(((status['x']-45)-self.eye_width//2,(status['y']-65)), 
 				left_eye_coord, 
-				[	int(max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)*(min((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)),
-	 				int(max(rounded_corners-abs(min(angle_eyebrow*15,10)),0)*(min((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)), 
-					int(rounded_corners*(min((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)), 
-					int(rounded_corners*(min((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1))], 
+				[	int(max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)*(-((min(status['left_right'],0)-0.5)**2+(min(status['left_right'],0)-0.5)+0.25)+1)),
+	 				int(max(rounded_corners-abs(min(angle_eyebrow*15,10)),0)*(-((min(status['left_right'],0)-0.5)**2+(min(status['left_right'],0)-0.5)+0.25)+1)), 
+					int(rounded_corners*(-((min(status['left_right'],0)-0.5)**2+(min(status['left_right'],0)-0.5)+0.25)+1)), 
+					int(rounded_corners*(-((min(status['left_right'],0)-0.5)**2+(min(status['left_right'],0)-0.5)+0.25)+1))], 
 					1, key='left_eye')
 
 			self.__bounding['left_eye'] = [calculate_bound(left_eye_coord, offset = ((status['x']-45)-self.eye_width//2,(status['y']-65)))]
@@ -141,12 +144,14 @@ class Screen():
 					(self.eye_width, round(min(under_y, self.eye_height-max(status['left_right'], 0)*self.eye_height/2))), 
 					(0, round(min(under_y, self.eye_height-max(status['left_right'], 0)*self.eye_height/2)))]
 			
+			print(f"Right eye rounded: {(status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25}")
+			
 			self.__screen_drawer.draw_polygon_rounded(((status['x']+45)-self.eye_width//2,(status['y']-65)),
 				right_eye_coord, 
-				[int(max(rounded_corners-abs(min(angle_eyebrow*15,10)),0)*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)),
-	 			int(max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)), 
-					int(rounded_corners*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1)), 
-					int(rounded_corners*(max((status['left_right']-0.5)**2+(status['left_right']-0.5)+0.25,0)+1))], 
+				[int(max(rounded_corners-abs(min(angle_eyebrow*15,10)),0)*(-((max(status['left_right'],0)-0.5)**2+(max(status['left_right'],0)-0.5)+0.25)+1)),
+	 			int(max(rounded_corners-abs(max(angle_eyebrow*15,-10)),0)*(-((max(status['left_right'],0)-0.5)**2+(max(status['left_right'],0)-0.5)+0.25)+1)), 
+					int(rounded_corners*(-((max(status['left_right'],0)-0.5)**2+(max(status['left_right'],0)-0.5)+0.25)+1)), 
+					int(rounded_corners*(-((max(status['left_right'],0)-0.5)**2+(max(status['left_right'],0)-0.5)+0.25)+1))], 
 					1, key='right_eye')
 			
 			self.__bounding['right_eye'] = [calculate_bound(right_eye_coord, offset = ((status['x']+45)-self.eye_width//2,(status['y']-65)))]
