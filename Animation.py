@@ -303,7 +303,7 @@ class Emotion:
 		else:
 			self.triggers['blink'].change_function = lambda t: 10**(-2)*t**2
 			self.triggers['face_move'].change_function = lambda t: 10**(-3.5)*t**2+1*t**(-1)
-			self.triggers['background'].change_function = lambda t: 10**(-4.5)*t**2
+			self.triggers['background'].change_function = lambda t: 10**(-3.5)*t**2
 
 	def check_triggers(self):
 		for trigger in self.triggers.values():
