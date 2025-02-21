@@ -122,8 +122,8 @@ class main_system():
 			user="coencoensmeets",
 			repo="Maja-Pico-code",
 			branch="feature/OTA",
-			files = ["Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
-			debug = True,
+			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
+			debug = False,
 			working_dir = None
 		)
 		if OTA.update():
