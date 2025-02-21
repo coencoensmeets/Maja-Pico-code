@@ -28,7 +28,7 @@ class Senko:
     raw = "https://raw.githubusercontent.com"
     github = "https://github.com"
 
-    def __init__(self, user, repo, url=None, branch="master", working_dir="app", files=["boot.py", "main.py"], headers={}, cleanup=[], buffersize=4096, debug=False):
+    def __init__(self, user, repo, url=None, branch="master", working_dir=None, files=["boot.py", "main.py"], headers={}, cleanup=[], buffersize=4096, debug=False):
         """Senko OTA agent class.
 
         Args:
@@ -45,7 +45,10 @@ class Senko:
             debug (boolean, optional): Print debug information
         """
         self.base_url = "{}/{}/{}".format(self.raw, user, repo) if user else url.replace(self.github, self.raw)
-        self.url = url if url is not None else "{}/{}/{}".format(self.base_url, branch, working_dir)
+        if working_dir:
+            self.url = "{}/{}/{}".format(self.base_url, branch, working_dir)
+        else:
+            self.url = "{}/{}".format(self.base_url, branch)
         self.headers = headers
         self.files = files
         self.cleanup = cleanup
@@ -101,22 +104,26 @@ class Senko:
             if not file_or_dir_exists(path):
                 os.mkdir(path)
 
-            with open(file, 'wb') as writer:
-                # print('writer', writer)
+            temp_file = file + ".tmp"
+            with open(temp_file, 'wb') as writer:
                 while True:
                     gc.collect()
                     data = r.read(self.buffersize)
                     if not data:
                         break
                     writer.write(data)
+
+            os.rename(temp_file, file)
+            if self.debug:
+                print('_stream_url_to_file', file, url)
             return None
         except Exception as e:
             if self.debug:
                 print('write error', url, file, e)
+            # Remove the partially downloaded file
+            if file_or_dir_exists(temp_file):
+                os.remove(temp_file)
             return None
-
-        if self.debug:
-            print('_stream_url_to_file', file, url)
 
 
     def _check_all(self):
