@@ -41,7 +41,7 @@ class ResetDetector():
 class main_system():
 	def __init__(self, safety_switch=True):
 		gc.collect()
-		self.LEDS = Lights(N=8, brightness=1, pin=machine.Pin(2))
+		self.LEDS = Lights(N=8, brightness=1, pin=machine.Pin(12))
 		self.state = State(self.LEDS)
 
 		self.safety_switch = safety_switch
@@ -122,13 +122,15 @@ class main_system():
 			user="coencoensmeets",
 			repo="Maja-Pico-code",
 			branch="feature/OTA",
-			files = ["Test.py"],
+			files = ["Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
 			debug = True,
 			working_dir = None
 		)
 		if OTA.update():
 			print("Updated to the latest version! Rebooting...")
 			self.WD.kill()
+		else:
+			print("No updates found!")
 
 	def __still_up(self):
 		print("Sensor thread still running!")
@@ -203,7 +205,7 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		update_period = Periodic(func=self.__update, freq=1)
+		update_period = Periodic(func=self.__update, freq=60)
 		Test_periodic = Periodic(func=self.__Test, freq=1)
 
 		get_failed_count = 0

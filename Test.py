@@ -7,8 +7,6 @@ import machine
 
 import senko
 
-# TEST!!@#
-
 OTA = senko.Senko(
   user="coencoensmeets",
   repo="Maja-Pico-code",
