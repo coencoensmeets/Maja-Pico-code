@@ -7,11 +7,13 @@ import machine
 
 import senko
 
+# TEST!!@#
+
 OTA = senko.Senko(
   user="coencoensmeets",
   repo="Maja-Pico-code",
   branch="feature/OTA",
-  files = ["Test.py", "senko.py"],
+  files = ["Test.py", "Test123.py"],
   debug = True,
   working_dir = None
 )
