@@ -18,7 +18,7 @@ from Webserver import Webserver, Secrets, Local_Server
 import tft_config
 
 TOGGLE_TIME = 1500
-VERSION = "1.1.6.7"
+VERSION = "1.1.6.1"
 
 class ResetDetector():
 	def __init__(self):
@@ -57,7 +57,7 @@ class main_system():
 			self.state.load_state(reset=False)
 			self.state.draw_state()
 			Local_Server(self.LEDS)
-		self.ws = Webserver(user_id=USER_ID, ssid = SSID, password=PASSWORD, base = "https://thomasbendington.pythonanywhere.com", version = )
+		self.ws = Webserver(user_id=USER_ID, ssid = SSID, password=PASSWORD, base = "https://thomasbendington.pythonanywhere.com", version = VERSION)
 
 		self.state_sync = StateSync(USER_ID, self.LEDS, self.state)
 
@@ -206,7 +206,7 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		update_period = Periodic(func=self.__update, freq=60)
+		update_period = Periodic(func=self.__update, freq=60*60)
 		Test_periodic = Periodic(func=self.__Test, freq=1)
 
 		get_failed_count = 0
@@ -222,7 +222,7 @@ class main_system():
 				if not Success:
 					self.WD.kill()
 
-			# update_period.call_func()
+			update_period.call_func()
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
