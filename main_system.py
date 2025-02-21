@@ -123,7 +123,7 @@ class main_system():
 			repo="Maja-Pico-code",
 			branch="feature/OTA",
 			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
-			debug = False,
+			debug = True,
 			working_dir = None
 		)
 		if OTA.update():
