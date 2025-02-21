@@ -3,6 +3,16 @@ import time
 import _thread
 import rp2
 from secrets import SSID, PASSWORD
+import machine
+
+import senko
+
+OTA = senko.Senko(
+  user="coencoensmeets",
+  repo="Maja-Pico-code",
+  branch="feature/OTA",
+  files = ["Test.py", "Test2.py"]
+)
 
 country = "NL"
 
@@ -27,7 +37,9 @@ def connect_normal():
         print("Failed to connect to network")
     print('network config:', wlan.ifconfig())
 
-    print("Sleep for 2 seconds")
+    if OTA.update():
+        print("Updated to the latest version! Rebooting...")
+        machine.reset()
     time.sleep(2)
     wlan.disconnect()
 
@@ -39,5 +51,5 @@ def second_thread():
         print("Second thread-")
         time.sleep(2)
 
-_thread.start_new_thread(second_thread, ())
+# _thread.start_new_thread(second_thread, ())
 main_thread()

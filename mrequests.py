@@ -286,10 +286,7 @@ def request(
             # print("Connecting to %s:%i..." % (ctx.host, ctx.port))
             sock.connect(ai[-1])
             if ctx.scheme == "https":
-                try:
-                    import ssl
-                except ImportError:
-                    import ussl as ssl
+                import ssl
 
                 # print("Wrapping socket with SSL")
                 create_ctx = getattr(ssl, 'create_default_context', None)
