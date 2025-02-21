@@ -13,7 +13,7 @@ OTA = senko.Senko(
   user="coencoensmeets",
   repo="Maja-Pico-code",
   branch="feature/OTA",
-  files = ["Test.py", "Test123.py"],
+  files = ["Test.py"],
   debug = True,
   working_dir = None
 )

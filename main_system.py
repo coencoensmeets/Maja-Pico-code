@@ -5,6 +5,7 @@ import gc
 import json
 import os
 import micropython
+import senko
 
 from DHT_Sensor import climate_sensor
 from Touch_Sensor import TouchManager
@@ -116,6 +117,19 @@ class main_system():
 
 		print("Startup complete!\n----------------\n")
 
+	def __update(self):
+		OTA = senko.Senko(
+			user="coencoensmeets",
+			repo="Maja-Pico-code",
+			branch="feature/OTA",
+			files = ["Test.py"],
+			debug = True,
+			working_dir = None
+		)
+		if OTA.update():
+			print("Updated to the latest version! Rebooting...")
+			self.WD.kill()
+
 	def __still_up(self):
 		print("Sensor thread still running!")
 
@@ -189,6 +203,7 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
+		update_period = Periodic(func=self.__update, freq=1)
 		Test_periodic = Periodic(func=self.__Test, freq=1)
 
 		get_failed_count = 0
@@ -203,6 +218,8 @@ class main_system():
 				Success = self.ws.connect()
 				if not Success:
 					self.WD.kill()
+
+			update_period.call_func()
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
