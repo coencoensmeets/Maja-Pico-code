@@ -304,6 +304,10 @@ class State():
 		print("Waiting")
 		sleep(2)
 		print(f"Test: {self.__current_status}")
+		os.remove('state.json')
+		print("Waiting")
+		sleep(2)
+		gc.collect()
 		with open('state.json', 'w') as file:
 			json.dump(self.__current_status, file)
 		print(f"Saved state: {self.__current_status}")

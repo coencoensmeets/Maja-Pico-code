@@ -206,8 +206,7 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		update_period = Periodic(func=self.__update, freq=60*60)
-		Test_periodic = Periodic(func=self.__Test, freq=1)
+		update_period = Periodic(func=self.__update, freq=1/(10*60))
 
 		get_failed_count = 0
 
@@ -222,7 +221,7 @@ class main_system():
 				if not Success:
 					self.WD.kill()
 
-			update_period.call_func()
+			# update_period.call_func()
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
@@ -253,14 +252,12 @@ class main_system():
 			if self.state_sync.queue.check():
 				self.state_sync.post(webserver=self.ws)
 
-			# Test_periodic.call_func()
-
 			animation_periodic.call_func()
 
 			t_end = ticks_ms()
 			if (ticks_diff(t_end, t_start) < 2000):
 				sleep_ms(2000-ticks_diff(t_end, t_start))
-			# print(f"Time taken (Server loop): {ticks_diff(t_end, t_start)}")
+			print(f"Time taken (Server loop): {ticks_diff(t_end, t_start)}")
 		print("Server thread is going to kill the sensor thread!")
 		self.WD.kill()
 
