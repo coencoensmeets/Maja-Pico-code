@@ -211,9 +211,9 @@ class State():
 				new_status = self.__animator.animate_status(self.__current_status)
 				Changed = False
 				for keys in new_status.keys():
-					if self.__current_status[keys] != new_status[keys]:
+					if self.__current_status.get(keys, None) != new_status.get(keys, None):
 						Changed = True
-					self.__current_status[keys] = new_status[keys]
+					self.__current_status[keys] = new_status.get(keys, self.__current_status.get(keys, None))
 				
 				if not Changed and not self.__particles_queue.running():
 					return

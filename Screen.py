@@ -67,7 +67,7 @@ class Screen():
 				len(particles) == 0 and 
 				not any(key in newstatus.keys() for key in ['left_eye', 'right_eye', 'mouth', 'x', 'y', 
 															'eye_open', 'left_right', 'eyebrow_angle', 'under_eye_lid', 
-															'mouth_width', 'mouth_y', 'smile', 'cheeks'])):
+															'mouth_width', 'mouth_y', 'smile', 'cheeks', 'smirk', 'yawn'])):
 			return
 
 		# todo: The face is always updated. Not only when the face changes. This is not optimal.
@@ -90,7 +90,7 @@ class Screen():
 			self.__draw_eyes(status)
 	
 			
-		if True or any(key in ['x', 'y', 'mouth_width', 'mouth_y', 'smile', 'smirk'] for key in newstatus.keys()):
+		if True or any(key in ['x', 'y', 'mouth_width', 'mouth_y', 'smile', 'smirk', 'yawn'] for key in newstatus.keys()):
 			self.__draw_mouth(status)
 
 		if True or any('cheeks' in newstatus.keys()):

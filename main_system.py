@@ -183,7 +183,7 @@ class main_system():
 			elif touch_state['right'] == -5: #State: Reset (Coding) (Hold left)
 				Secrets().reset_secrets()
 				print(f"Secrets reset! Restarting in 2s")
-				time.sleep(2)
+				sleep(2)
 				self.WD.kill()
 
 			elif touch_state['left'] == -5: #State: Reset (Double tap left)
