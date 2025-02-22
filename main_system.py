@@ -5,6 +5,7 @@ import gc
 import json
 import os
 import micropython
+import senko
 
 from DHT_Sensor import climate_sensor
 from Touch_Sensor import TouchManager
@@ -17,6 +18,7 @@ from Webserver import Webserver, Secrets, Local_Server
 import tft_config
 
 TOGGLE_TIME = 1500
+VERSION = "1.1.6.1"
 
 class ResetDetector():
 	def __init__(self):
@@ -40,7 +42,7 @@ class ResetDetector():
 class main_system():
 	def __init__(self, safety_switch=True):
 		gc.collect()
-		self.LEDS = Lights(N=8, brightness=1, pin=machine.Pin(2))
+		self.LEDS = Lights(N=8, brightness=1, pin=machine.Pin(12))
 		self.state = State(self.LEDS)
 
 		self.safety_switch = safety_switch
@@ -55,7 +57,7 @@ class main_system():
 			self.state.load_state(reset=False)
 			self.state.draw_state()
 			Local_Server(self.LEDS)
-		self.ws = Webserver(user_id=USER_ID, ssid = SSID, password=PASSWORD, base = "https://thomasbendington.pythonanywhere.com")
+		self.ws = Webserver(user_id=USER_ID, ssid = SSID, password=PASSWORD, base = "https://thomasbendington.pythonanywhere.com", version = VERSION)
 
 		self.state_sync = StateSync(USER_ID, self.LEDS, self.state)
 
@@ -115,6 +117,21 @@ class main_system():
 			print("\nRebooting turned on!\n")
 
 		print("Startup complete!\n----------------\n")
+
+	def __update(self):
+		OTA = senko.Senko(
+			user="coencoensmeets",
+			repo="Maja-Pico-code",
+			branch="develop",
+			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
+			debug = True,
+			working_dir = None
+		)
+		if OTA.update():
+			print("Updated to the latest version! Rebooting...")
+			self.WD.kill()
+		else:
+			print("No updates found!")
 
 	def __still_up(self):
 		print("Sensor thread still running!")
@@ -180,7 +197,7 @@ class main_system():
 			# if (ticks_diff(ticks_ms(), t_start) > 20):
 			# 	print(f"Time taken (Sensor loop): {ticks_diff(ticks_ms(), t_start)}")
 
-		print("Sensor Thread Stopped!\nKilling all threads!")
+		print("Sensor thread is going to kill the server thread!")
 		self.WD.kill()
 
 	def __server_thread(self):
@@ -189,7 +206,7 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		Test_periodic = Periodic(func=self.__Test, freq=1)
+		update_period = Periodic(func=self.__update, freq=1/(10*60))
 
 		get_failed_count = 0
 
@@ -203,6 +220,8 @@ class main_system():
 				Success = self.ws.connect()
 				if not Success:
 					self.WD.kill()
+
+			# update_period.call_func()
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
@@ -233,14 +252,12 @@ class main_system():
 			if self.state_sync.queue.check():
 				self.state_sync.post(webserver=self.ws)
 
-			# Test_periodic.call_func()
-
 			animation_periodic.call_func()
 
 			t_end = ticks_ms()
 			if (ticks_diff(t_end, t_start) < 2000):
 				sleep_ms(2000-ticks_diff(t_end, t_start))
-			# print(f"Time taken (Server loop): {ticks_diff(t_end, t_start)}")
+			print(f"Time taken (Server loop): {ticks_diff(t_end, t_start)}")
 		print("Server thread is going to kill the sensor thread!")
 		self.WD.kill()
 
