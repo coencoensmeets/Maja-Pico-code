@@ -393,7 +393,7 @@ class Emotion:
 		elif (self.tired_value < 0.8):
 			AnimationBank.yawn(self.State)
 		else:
-			Options = {'yawn': 1.0, 'falling_asleep': 0}
+			Options = {'yawn': 0.5, 'falling_asleep': 0.5}
 			choice = weighted_choice(list(Options.keys()), weights=Options.values())
 			if choice == 'yawn':
 				AnimationBank.yawn(self.State)

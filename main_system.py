@@ -268,5 +268,5 @@ class main_system():
 		print("Memory free:", gc.mem_free(), "bytes")
 
 if __name__ == '__main__':
-	system = main_system(safety_switch=True, update_code=False)
+	system = main_system(safety_switch=True, update_code=True)
 	system.start_threads()
