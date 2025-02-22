@@ -123,7 +123,7 @@ class main_system():
 		OTA = senko.Senko(
 			user="coencoensmeets",
 			repo="Maja-Pico-code",
-			branch="develop",
+			branch="feature/Tired",
 			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
 			debug = True,
 			working_dir = None
