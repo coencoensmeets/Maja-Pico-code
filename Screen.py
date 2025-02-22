@@ -23,6 +23,13 @@ def calculate_bound(points, offset = (0,0)):
 	max_y = int(max(points, key=lambda x: x[1])[1]+offset[1])
 	return ((min_x, min_y), (max_x, max_y))
 
+def overwrite_bound(bound, points, offset = (0,0)):
+	min_x = min(int(min(points, key=lambda x: x[0])[0]+offset[0]), bound[0][0][0])
+	min_y = min(int(min(points, key=lambda x: x[1])[1]+offset[1]), bound[0][0][1])
+	max_x = max(int(max(points, key=lambda x: x[0])[0]+offset[0]), bound[0][1][0])
+	max_y = max(int(max(points, key=lambda x: x[1])[1]+offset[1]), bound[0][1][1])
+	return ((min_x, min_y), (max_x, max_y))
+
 class Screen():
 	def __init__(self, eye_size = (30,90), mouth_size = (60,40)):
 		self.eye_height = eye_size[1]
@@ -153,10 +160,10 @@ class Screen():
 			self.__bounding['right_eye'] = [calculate_bound(right_eye_coord, offset = ((status['x']+45)-self.eye_width//2,(status['y']-65)))]
 			
 	def __draw_mouth(self, status):
-		mouth_coord = [(round(self.mouth_width//2-(status['mouth_width']//2)*(1-status['smirk']*0.5)), round(status['mouth_y']*self.mouth_height//2)), 
-				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.5)), round(status['mouth_y']*self.mouth_height//2)), 
-				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.5)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2)), 
-				 (round(self.mouth_width//2-status['mouth_width']//2*(1-status['smirk']*0.5)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2))]
+		mouth_coord = [(round(self.mouth_width//2-(status['mouth_width']//2)*(1-status['smirk']*0.3)), round(status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.3)), round(status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.3)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2-status['mouth_width']//2*(1-status['smirk']*0.3)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2))]
 		
 		mouth_radii = [round(min(status['mouth_width']/2,max(self.mouth_height//4-(status['smile']*self.mouth_height//4)*(1-status['smirk']),0))),
 				round(min(status['mouth_width']/2,max(self.mouth_height//4-status['smile']*self.mouth_height//4*(1+status['smirk']),0))),
@@ -169,7 +176,12 @@ class Screen():
 				1, key='mouth')
 		
 		self.__bounding['mouth'] = [calculate_bound(mouth_coord, offset=(round(status['x']-self.mouth_width//2), status['y']+45))]
-
+		
+		if (status.get('yawn', 0) > 0):
+			self.__screen_drawer.draw_elipse((round(status['x']), round(status['y']+45+(1.25-0.25*status['smile'])*self.mouth_height//4)), (15, round(30*status.get('yawn', 0))), 1, key='mouth')
+			self.__bounding['mouth'] = [overwrite_bound(self.__bounding['mouth'], 
+											  [(-15, -30*status.get('yawn', 0)),
+			  									(15, 30*status.get('yawn', 0))], offset=(round(status['x']), round(status['y']+45+(1.25-0.25*status['smile'])*self.mouth_height//4)))]
 	def __draw_cheeks(self, status):
 		if status['cheeks'] > 0:
 			x_offset = 60

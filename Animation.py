@@ -246,137 +246,161 @@ class AnimationBank():
 			State.trigger_animation({'eye_open': 1.0, 'eyebrow_angle': 0.0}, 200, Time_Profiles.ease_in, dont_lock=True)
 			State.trigger_animation({'eye_open': saved_state['eye_open'], 'eyebrow_angle': saved_state['eyebrow_angle']}, 200, Time_Profiles.ease_out, dont_lock=True)
 
-	# @staticmethod
-	# def falling_asleep(State):
-	# 	State.trigger_animation({'eye_open': 1.0, 'under_eye_lid': 0.4}, 500, Time_Profiles.ease_in_out)
-	# 	State.trigger_animation({'eye_open': 0.4, 'under_eye_lid': 0.0, 'mouth_width': 40, 'mouth_y': 1, "value": 0.1}, 2000, Time_Profiles.ease_in)
-	# 	State.trigger_animation({'eye_open': 1.0, 'under_eye_lid': 0.4, 'mouth_y': 0, "value": 1}, 100, Time_Profiles.ease_out)
-	# 	State.trigger_wait_animation(1500)
-	# 	State.trigger_animation({'eye_open': 0.0, 'under_eye_lid': 0.0, 'mouth_y': 1, "value": 0}, 3000, Time_Profiles.ease_in)
-	# 	State.trigger_animation({'eye_open': 1.0, 'under_eye_lid': 0.4, 'mouth_y': 0, "value": 1}, 100, Time_Profiles.ease_out)
-	# 	State.trigger_wait_animation(800)
-	# 	State.trigger_animation({'eye_open': 0.1,'under_eye_lid': 0.0, 'mouth_y': 1, "value": 0.1}, 2100, Time_Profiles.ease_in)
-	# 	State.trigger_animation({'eye_open': 1.0, 'under_eye_lid': 0.4, 'mouth_y': 0, "value": 1}, 100, Time_Profiles.ease_out)
-	# 	State.trigger_wait_animation(1000)
-	# 	State.trigger_animation({'eye_open': 0.05, 'under_eye_lid': 0.0, 'mouth_y': 1, "value": 0}, 3000, Time_Profiles.ease_in)
+	@staticmethod
+	def yawn(State):
+		saved_state = State.get_final_state(dont_lock=True)
+		State.trigger_animation({'mouth_width': 0, 'yawn': 0.8, 'eye_open': 0.2, 'under_eye_lid': 0.5}, 1200, Time_Profiles.ease_in, dont_lock=True)
+		State.trigger_animation({'mouth_width': 0, 'yawn': 1, 'eye_open': 0.1, 'under_eye_lid': 0.7}, 800, Time_Profiles.ease_out, dont_lock=True)
+		State.trigger_animation({'mouth_width': saved_state['mouth_width'], 'yawn': 0, 'eye_open': saved_state['eye_open'], 'under_eye_lid': saved_state['under_eye_lid']}, 800, Time_Profiles.ease_in_out, dont_lock=True)
+
+	@staticmethod
+	def falling_asleep(State, amount = None):
+		saved_state = State.get_final_state(dont_lock=True)
+		if amount is None:
+			amount = random.randint(1,3)
+		for i in range(amount):
+			State.trigger_animation({'eye_open': random.randint(0,4)//10, 'y': saved_state['y']+20,"value": 0.1}, random.randint(1500,3000), Time_Profiles.ease_in)
+			State.trigger_animation({'eye_open': saved_state['eye_open'], 'y': saved_state['y'], "value": saved_state['value']}, 100, Time_Profiles.ease_out)
+			if (i+1) < amount:
+				State.trigger_wait_animation(random.randint(500, 1500))
 
 class Trigger:
-    """
-    A class used to manage and execute triggers for animations based on time and random chance.
+	"""
+	A class used to manage and execute triggers for animations based on time and random chance.
 
-    Attributes:
-        State (State): The current state of the animation.
-        trigger_function (str): The name of the function to be triggered.
-        change_function (function): A function that determines the probability of the trigger occurring based on time.
-        __trigger_time (float): The last time the trigger was executed.
+	Attributes:
+		State (State): The current state of the animation.
+		trigger_function (str): The name of the function to be triggered.
+		change_function (function): A function that determines the probability of the trigger occurring based on time.
+		__trigger_time (float): The last time the trigger was executed.
 
-    Methods:
-        check_trigger(): Checks if the trigger should be executed based on the change function.
-        trigger(): Executes the trigger function.
-    """
+	Methods:
+		check_trigger(): Checks if the trigger should be executed based on the change function.
+		trigger(): Executes the trigger function.
+	"""
 
-    def __init__(self, State, trigger_function:str, change_function=lambda t: 0):
-        self.__State = State
-        self.trigger_function = trigger_function
-        self.change_function = change_function
-        self.__trigger_time = time()
+	def __init__(self, State, trigger_function:str, change_function=lambda t: 0):
+		self.__State = State
+		self.trigger_function = trigger_function
+		self.change_function = change_function
+		self.__trigger_time = time()
 
-    def check_trigger(self):
-        """
-        Checks if the trigger should be executed based on the change function.
-        If the trigger condition is met, it updates the trigger time and executes the trigger.
-        """
-        if self.__do_trigger():
-            self.__trigger_time = time()
-            self.trigger()
+	def check_trigger(self):
+		"""
+		Checks if the trigger should be executed based on the change function.
+		If the trigger condition is met, it updates the trigger time and executes the trigger.
+		"""
+		if self.__do_trigger():
+			self.__trigger_time = time()
+			self.trigger()
 
-    def trigger(self):
-        """
-        Executes the trigger function if it exists in the current emotion.
-        """
-        if hasattr(self.__State.Emotion.emotion, f'_trigger_{self.trigger_function}') and callable(getattr(self.__State.Emotion.emotion, f'_trigger_{self.trigger_function}')):
-            getattr(self.__State.Emotion.emotion, f'_trigger_{self.trigger_function}')()
-        else:
-            getattr(self.__State.Emotion.emotion, f'trigger_{self.trigger_function}')()
+	def trigger(self):
+		"""
+		Executes the trigger function if it exists in the current emotion.
+		"""
+		if hasattr(self.__State.Emotion.emotion, f'_trigger_{self.trigger_function}') and callable(getattr(self.__State.Emotion.emotion, f'_trigger_{self.trigger_function}')):
+			getattr(self.__State.Emotion.emotion, f'_trigger_{self.trigger_function}')()
+		else:
+			getattr(self.__State.Emotion.emotion, f'trigger_{self.trigger_function}')()
 
-    def __do_trigger(self):
-        """
-        Determines if the trigger should be executed based on the change function.
-        
-        Returns:
-            bool: True if the trigger should be executed, False otherwise.
-        """
-        return random.random() < self.change_function(time()-self.__trigger_time+0.001)
+	def __do_trigger(self):
+		"""
+		Determines if the trigger should be executed based on the change function.
+		
+		Returns:
+			bool: True if the trigger should be executed, False otherwise.
+		"""
+		return random.random() < self.change_function(time()-self.__trigger_time+0.001)
 
 
 class Emotion:
-    """
-    A base class for managing different emotional states and their associated triggers.
+	"""
+	A base class for managing different emotional states and their associated triggers.
 
-    Attributes:
-        State (State): The current state of the animation.
-        social_value (int): A value representing the social aspect of the emotion.
-        tired_value (int): A value representing the tiredness aspect of the emotion.
-        name (str): The name of the emotion.
-        triggers (dict): A dictionary of triggers associated with the emotion.
+	Attributes:
+		State (State): The current state of the animation.
+		social_value (int): A value representing the social aspect of the emotion.
+		tired_value (int): A value representing the tiredness aspect of the emotion.
+		name (str): The name of the emotion.
+		triggers (dict): A dictionary of triggers associated with the emotion.
 
-    Methods:
-        update_parameters(): Updates the parameters for the emotion's triggers.
-        check_triggers(): Checks and executes triggers based on their change functions.
-        trigger_blink(): Triggers a blink animation.
-        trigger_face_move(): Triggers a face move animation.
-        trigger_background(): Triggers a background animation.
-    """
+	Methods:
+		update_parameters(): Updates the parameters for the emotion's triggers.
+		check_triggers(): Checks and executes triggers based on their change functions.
+		trigger_blink(): Triggers a blink animation.
+		trigger_face_move(): Triggers a face move animation.
+		trigger_background(): Triggers a background animation.
+	"""
 
-    def __init__(self, State, social_value=50, tired_value=50):
-        self.social_value = social_value
-        self.tired_value = tired_value
-        self.name = None
+	def __init__(self, State, social_value=50, tired_value=50):
+		self.social_value = social_value
+		self.tired_value = tired_value
+		self.name = None
 
-        self.State = State
-        
-        self.triggers = {}
-        self.triggers['blink'] = Trigger(self.State, 'blink', None)
-        self.triggers['face_move'] = Trigger(self.State, 'face_move', None)
-        self.triggers['background'] = Trigger(self.State, 'background', None)
+		self.State = State
+		
+		self.triggers = {}
+		self.triggers['blink'] = Trigger(self.State, 'blink', None)
+		self.triggers['face_move'] = Trigger(self.State, 'face_move', None)
+		self.triggers['background'] = Trigger(self.State, 'background', None)
+		self.triggers['tired'] = Trigger(self.State, 'tired', None)
 
-        self.update_parameters()
+		self.update_parameters()
 
-    def update_parameters(self):
-        """
-        Updates the parameters for the emotion's triggers.
-        """
-        if hasattr(self, f'_update_parameters') and callable(getattr(self, f'_update_parameters')):
-            getattr(self, f'_update_parameters')()
-        else:
-            self.triggers['blink'].change_function = lambda t: 10**(-2)*t**2
-            self.triggers['face_move'].change_function = lambda t: 10**(-3.5)*t**2+1*t**(-1)
-            self.triggers['background'].change_function = lambda t: 10**(-3.5)*t**2
+	def update_parameters(self):
+		"""
+		Updates the parameters for the emotion's triggers.
+		"""
+		self.triggers['blink'].change_function = lambda t: 10**(-2)*t**2
+		self.triggers['face_move'].change_function = lambda t: 10**(-3.5)*t**2+1*t**(-1)
+		self.triggers['background'].change_function = lambda t: 10**(-2.8)*t**2
+		self.triggers['tired'].change_function = lambda t:  10**(-2.8-(1-(self.tired_value/100)**2)*3)*t**2
 
-    def check_triggers(self):
-        """
-        Checks and executes triggers based on their change functions.
-        """
-        for trigger in self.triggers.values():
-            trigger.check_trigger()
+		if hasattr(self, f'_update_parameters') and callable(getattr(self, f'_update_parameters')):
+			getattr(self, f'_update_parameters')()
 
-    def trigger_blink(self):
-        """
-        Triggers a blink animation.
-        """
-        AnimationBank.blink(self.State)
+	def check_triggers(self):
+		"""
+		Checks and executes triggers based on their change functions.
+		"""
+		for trigger in self.triggers.values():
+			trigger.check_trigger()
 
-    def trigger_face_move(self):
-        """
-        Triggers a face move animation.
-        """
-        self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(100, 140)}, random.randint(500,1500), Time_Profiles.ease_in_out, dont_lock=True)
+	def trigger_blink(self):
+		"""
+		Triggers a blink animation.
+		"""
+		AnimationBank.blink(self.State)
 
-    def trigger_background(self):
-        """
-        Triggers a background animation.
-        """
-        pass
+	def trigger_face_move(self):
+		"""
+		Triggers a face move animation.
+		"""
+		self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(100, 140)}, random.randint(500,1500), Time_Profiles.ease_in_out, dont_lock=True)
+
+	def trigger_background(self):
+		"""
+		Triggers a background animation.
+		"""
+		pass
+
+	def trigger_tired(self):
+		"""
+		Triggers a tired animation.
+		"""
+		if (self.tired_value <0.5):
+			pass
+		elif (self.tired_value < 0.8):
+			AnimationBank.yawn(self.State)
+		else:
+			Options = {'yawn': 1.0, 'falling_asleep': 0}
+			choice = weighted_choice(list(Options.keys()), weights=Options.values())
+			if choice == 'yawn':
+				AnimationBank.yawn(self.State)
+			elif choice == 'falling_asleep':
+				AnimationBank.falling_asleep(self.State)
+
+
 
 	
 class Happy(Emotion):
@@ -435,8 +459,6 @@ class Sad(Emotion):
 		self.update_parameters()
 
 	def _update_parameters(self):
-		self.triggers['blink'].change_function = lambda t: 0.01
-		self.triggers['face_move'].change_function = lambda t: 10**(-3.5)*t**2+1*t**(-1)
 		self.triggers['background'].change_function = lambda t: 1e-2*t**2
 
 	def _trigger_face_move(self):
@@ -489,14 +511,9 @@ class Horny(Emotion):
 		super().__init__(State, social_value, tired_value)
 		self.name = "horny"
 
-		self.State.trigger_animation({'eye_open': 0.7, 'eyebrow_angle': 0.4, 'under_eye_lid': 0.2, 
+		self.State.trigger_animation({'eye_open': 0.7, 'eyebrow_angle': 0.3, 'under_eye_lid': 0.2, 
 									'smile': 1, 'smirk': random.choice([-1,1]), 'cheeks' : 0, 'mouth_width': 60, 
 									"hue": 275, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out)
-
-	def _update_parameters(self):
-		self.triggers['blink'].change_function = lambda t: 10**(-2)*t**2
-		self.triggers['face_move'].change_function = lambda t: 10**(-3.5)*t**2+1*t**(-1)
-		self.triggers['background'].change_function = lambda t: 10**(-2.8)*t**2
 
 	def _trigger_background(self):
 		Options = {'wink': 0.2, 'shake_yes': 0.05, 'dance': 0.05, 'eye_brows_raise': 0.3, 'fast_blinking': 0.2, 'kiss': 0.2}
@@ -524,11 +541,6 @@ class Love(Emotion):
 		self.State.trigger_animation({'eye_open': 1.0, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.5, 
 								'smile': 1, 'cheeks' : 1, 'smirk': 0, 'mouth_width': 40, 'yawn': 0, 
 								"hue": 300, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out)
-
-	def _update_parameters(self):
-		self.triggers['blink'].change_function = lambda t: 10**(-2)*t**2
-		self.triggers['face_move'].change_function = lambda t: 10**(-3.5)*t**2+1*t**(-1)
-		self.triggers['background'].change_function = lambda t: 10**(-2.8)*t**2
 
 	def _trigger_background(self):
 		Options = {'fast_blinking': 0.2, 'wink': 0.2, 'kiss': 0.25, 'shake_yes': 0.1, 'dance': 0.1, 'hearts_flying': 0.25}
