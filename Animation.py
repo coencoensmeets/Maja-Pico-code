@@ -12,7 +12,7 @@ from TimeProfiles import Time_Profiles
 import gc9a01
 import tft_config
 import gc
-from Particle import Tear, Heart
+from Particle import Tear, Heart, Z
 from Light import Lights
 
 def weighted_choice(options, weights):
@@ -256,6 +256,8 @@ class AnimationBank():
 	@staticmethod
 	def falling_asleep(State, amount = None):
 		saved_state = State.get_final_state(dont_lock=True)
+		if saved_state['eye_open']<0.4:
+			pass
 		if amount is None:
 			amount = random.randint(1,3)
 		for i in range(amount):
@@ -395,6 +397,8 @@ class Emotion:
 		"""
 		Triggers a tired animation.
 		"""
+		if self.name == 'sleeping':
+			pass
 		if (self.tired_value <0.5):
 			pass
 		elif (self.tired_value < 0.8):
@@ -581,17 +585,32 @@ class Sleeping(Emotion):
 		self.name = "sleeping"
 
 		self.State.trigger_animation({'x': 120, "y": 150,
-								'eye_open': 0.1, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.1, 
+								'eye_open': 0.15, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.1, 
 								'smile': 0,'cheeks' : 0, 'smirk': 0, 'mouth_width': 40, 'yawn': 0,
 								"hue": 0, "saturation": 0, "value": 0}, 3000, Time_Profiles.ease_in_out)
 		
 	def _update_parameters(self):
 		self.triggers['blink'].change_function = lambda t: 0
-		self.triggers['face_move'].change_function = lambda t: 0
+		self.triggers['face_move'].change_function = lambda t: 0.1
 		self.triggers['tired'].change_function = lambda t:  0
 
+	def _trigger_face_move(self):
+		self.State.trigger_animation({'y': random.randint(120,140)}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
+		self.State.trigger_animation({'y': 150}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
+
 	def _trigger_background(self):
-		AnimationBank.wake_up_fall_asleep(self.State)
+		Options = {'wake_up_fall_asleep': 0.0, 'Z_particles': 0}
+		choice = weighted_choice(list(Options.keys()), weights=Options.values())
+
+		if choice == 'wake_up_fall_asleep':
+			AnimationBank.wake_up_fall_asleep(self.State)
+		if choice == 'Z_particles':
+			for i in range(random.randint(6,14)):
+				saved_state = self.State.get_current_state(dont_lock=True)
+				Z_particle = Z((saved_state['x']+45, saved_state['y']+10, -pi/4))
+				Z_particle.scale(random.randint(20, 40)/100)
+				self.State.queue_particle(Z_particle, (i**1.6)*500, dont_lock=True)
+				del Z_particle
 
 class start_up(Emotion):
 	def __init__(self, State, social_value=50, tired_value=50):
