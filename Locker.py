@@ -46,7 +46,7 @@ class ConditionalLock:
                     return False
             self.lock.acquire()
             self.acquired = True
-        return self.acquired
+        return True
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
