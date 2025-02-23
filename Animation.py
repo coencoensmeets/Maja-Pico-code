@@ -2,7 +2,7 @@ from machine import Pin, I2C
 from utime import sleep, time, sleep_ms, ticks_ms, ticks_diff
 import random
 import _thread
-from math import pi, exp
+from math import pi, exp, sin, cos
 
 from shapeDrawer import shapeDrawer
 from Light import Lights
@@ -599,7 +599,7 @@ class Sleeping(Emotion):
 		self.State.trigger_animation({'y': 150}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
 
 	def _trigger_background(self):
-		Options = {'wake_up_fall_asleep': 0.0, 'Z_particles': 0}
+		Options = {'wake_up_fall_asleep': 0.0, 'Z_particles': 0, 'look_around': 0.0, 'drooling': 1}
 		choice = weighted_choice(list(Options.keys()), weights=Options.values())
 
 		if choice == 'wake_up_fall_asleep':
@@ -611,6 +611,22 @@ class Sleeping(Emotion):
 				Z_particle.scale(random.randint(20, 40)/100)
 				self.State.queue_particle(Z_particle, (i**1.6)*500, dont_lock=True)
 				del Z_particle
+		if choice == 'look_around':
+			side = random.choice([-1, 1])
+			saved_state = self.State.get_current_state(dont_lock=True)
+			self.State.trigger_animation({'eye_open': 0.4}, 1000, Time_Profiles.ease_in_out, dont_lock=True)
+			self.State.trigger_animation({'x': 120+side*random.randint(20,40), 'y': saved_state['y']-random.randint(20,30)}, 2000, Time_Profiles.ease_in_out, dont_lock=True)
+			self.State.trigger_wait_animation(random.randint(800,1500), dont_lock=True)
+			self.State.trigger_animation({'x': saved_state['x'], 'y': saved_state['y'], 'eye_open':saved_state['eye_open']}, 2000, Time_Profiles.ease_in_out, dont_lock=True)
+		if choice == 'drooling':
+			print(f"Drooling")
+			side = random.choice([-1, 1])
+			saved_state = self.State.get_current_state(dont_lock=True)
+			tear = Tear((saved_state['x']+(saved_state['mouth_width']//4)*side, saved_state['y']+50, pi/2))
+			tear.scale(0.5)
+			tear.velocities = (lambda t: 1/11000*(t)**3, lambda t: sin(t*4+random.choice([0, pi])))
+			self.State.queue_particle(tear, 0, dont_lock=True)
+			self.State.trigger_wait_animation(2000)
 
 class start_up(Emotion):
 	def __init__(self, State, social_value=50, tired_value=50):
