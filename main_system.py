@@ -40,13 +40,12 @@ class ResetDetector():
 		print("Hard reset set!")
 
 class main_system():
-	def __init__(self, safety_switch=True, update_code=True):
+	def __init__(self, safety_switch=True):
 		gc.collect()
 		self.LEDS = Lights(N=8, brightness=1, pin=machine.Pin(12))
 		self.state = State(self.LEDS)
 
 		self.safety_switch = safety_switch
-		self.update_code = update_code
 		gc.collect()
 		self.dht20 = climate_sensor(scl=1, sda=0, rolling_avg_factor=1e3)
 		self.WD = WatchDog(30e3, stop_routine=self.stop_routine)
@@ -207,7 +206,7 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		update_period = Periodic(func=self.__update, freq=1/(10*60))
+		update_period = Periodic(func=self.__update, freq=1/(60*60))
 
 		get_failed_count = 0
 
@@ -222,8 +221,7 @@ class main_system():
 				if not Success:
 					self.WD.kill()
 			
-			if self.update_code:
-				update_period.call_func()
+			update_period.call_func()
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
@@ -268,5 +266,5 @@ class main_system():
 		print("Memory free:", gc.mem_free(), "bytes")
 
 if __name__ == '__main__':
-	system = main_system(safety_switch=True, update_code=True)
+	system = main_system(safety_switch=False)
 	system.start_threads()
