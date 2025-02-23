@@ -11,10 +11,10 @@ COLOURS = {'BLACK': 0x0000, 'WHITE': 0xFFFF, 'RED': 0xF800, 'GREEN': 0x07E0, 'BL
 
 def bound_to_rect(bound):
 	# TODO: add_bound in c function draw_boundary
-	return (clamp_coordinates(bound[0][0]-2, bound[0][1]-2), (min(bound[1][0]-bound[0][0]+4, SCREEN_SIZE[0]-bound[0][0]+1), min(bound[1][1]-bound[0][1]+4, SCREEN_SIZE[1]-bound[0][1]+1)))
+	return (clamp_coordinates(bound[0][0]-1, bound[0][1]-1), (min(bound[1][0]-bound[0][0]+4, SCREEN_SIZE[0]-bound[0][0]+1), min(bound[1][1]-bound[0][1]+4, SCREEN_SIZE[1]-bound[0][1]+1)))
 
 def clamp_coordinates(x, y):
-	return (max(min(x, SCREEN_SIZE[0]-1), 0), max(min(y, SCREEN_SIZE[1]-1), 0))
+	return (max(min(x, SCREEN_SIZE[0]+1), 0), max(min(y, SCREEN_SIZE[1]+1), 0))
 
 def calculate_bound(points, offset = (0,0)):
 	min_x = int(min(points, key=lambda x: x[0])[0]+offset[0])
@@ -61,6 +61,7 @@ class Screen():
 		else:
 			self.tft.off()
 			self.is_on = False
+			self.make_black()
 
 	def screen_toggle(self):
 		if self.is_on:

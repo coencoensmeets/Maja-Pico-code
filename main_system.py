@@ -206,22 +206,28 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		update_period = Periodic(func=self.__update, freq=1/(60*60))
+		update_period = Periodic(func=self.__update, freq=1/(5*60))
 
 		get_failed_count = 0
 
 		while self.WD.running():
 			t_start = ticks_ms()
+			print("1")
 			self.WD.update('main')
 			self.dht20.measure()
 			garbage_periodic.call_func()
+			print("2")
 
 			if not self.ws.isconnected():
 				Success = self.ws.connect()
 				if not Success:
 					self.WD.kill()
+
+			print("3")
 			
 			update_period.call_func()
+
+			print("4")
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
@@ -230,6 +236,8 @@ class main_system():
 					dht20_periodic.bypass_timing = True
 					print("Run next time!")
 				print(f"(Main): {server_return}")
+
+			print("5")
 
 			gc.collect()
 			server_return = light_periodic.call_func()
@@ -249,10 +257,16 @@ class main_system():
 				elif get_failed_count > 0:
 					get_failed_count = 0
 
+			print("6")
+
 			if self.state_sync.queue.check():
 				self.state_sync.post(webserver=self.ws)
 
+			print("7")
+
 			animation_periodic.call_func()
+
+			print("8")
 
 			t_end = ticks_ms()
 			if (ticks_diff(t_end, t_start) < 2000):

@@ -595,17 +595,17 @@ class Sleeping(Emotion):
 		self.triggers['tired'].change_function = lambda t:  0
 
 	def _trigger_face_move(self):
-		self.State.trigger_animation({'y': random.randint(120,140)}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
+		self.State.trigger_animation({'y': random.randint(110,130)}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
 		self.State.trigger_animation({'y': 150}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
 
 	def _trigger_background(self):
-		Options = {'wake_up_fall_asleep': 0.0, 'Z_particles': 0, 'look_around': 0.0, 'drooling': 1}
+		Options = {'wake_up_fall_asleep': 0.2, 'Z_particles': 0.6, 'look_around': 0.1, 'drooling': 0.1}
 		choice = weighted_choice(list(Options.keys()), weights=Options.values())
 
 		if choice == 'wake_up_fall_asleep':
 			AnimationBank.wake_up_fall_asleep(self.State)
 		if choice == 'Z_particles':
-			for i in range(random.randint(6,14)):
+			for i in range(random.randint(6,10)):
 				saved_state = self.State.get_current_state(dont_lock=True)
 				Z_particle = Z((saved_state['x']+45, saved_state['y']+10, -pi/4))
 				Z_particle.scale(random.randint(20, 40)/100)
@@ -619,12 +619,12 @@ class Sleeping(Emotion):
 			self.State.trigger_wait_animation(random.randint(800,1500), dont_lock=True)
 			self.State.trigger_animation({'x': saved_state['x'], 'y': saved_state['y'], 'eye_open':saved_state['eye_open']}, 2000, Time_Profiles.ease_in_out, dont_lock=True)
 		if choice == 'drooling':
-			print(f"Drooling")
 			side = random.choice([-1, 1])
 			saved_state = self.State.get_current_state(dont_lock=True)
 			tear = Tear((saved_state['x']+(saved_state['mouth_width']//4)*side, saved_state['y']+50, pi/2))
 			tear.scale(0.5)
-			tear.velocities = (lambda t: 1/11000*(t)**3, lambda t: sin(t*4+random.choice([0, pi])))
+			tear.velocities = (lambda t: 1/3000*(t)**3, lambda t: sin(t*4+random.choice([0, pi])))
+			self.State.trigger_wait_animation(self.State.get_final_time()+200)
 			self.State.queue_particle(tear, 0, dont_lock=True)
 			self.State.trigger_wait_animation(2000)
 
