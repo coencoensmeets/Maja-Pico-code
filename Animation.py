@@ -2,7 +2,7 @@ from machine import Pin, I2C
 from utime import sleep, time, sleep_ms, ticks_ms, ticks_diff
 import random
 import _thread
-from math import pi
+from math import pi, exp
 
 from shapeDrawer import shapeDrawer
 from Light import Lights
@@ -352,8 +352,8 @@ class Emotion:
 		Updates the parameters for the emotion's triggers.
 		"""
 		self.triggers['blink'].change_function = lambda t: 10**(-2)*t**2
-		self.triggers['face_move'].change_function = lambda t: 10**(-3.5)*t**2+1*t**(-1)
-		self.triggers['background'].change_function = lambda t: 10**(-2.8)*t**2
+		self.triggers['face_move'].change_function = lambda t: 10**(-3.5-self.tired_value/100)*t**2+1*t**(-1)
+		self.triggers['background'].change_function = lambda t: 10**(-2.6-self.tired_value/100)*t**2
 		self.triggers['tired'].change_function = lambda t:  10**(-2.8-(1-(self.tired_value/100)**2)*3)*t**2
 
 		if hasattr(self, f'_update_parameters') and callable(getattr(self, f'_update_parameters')):
@@ -372,12 +372,12 @@ class Emotion:
 		"""
 		AnimationBank.blink(self.State)
 
-	def trigger_face_move(self):
+	def trigger_face_move(self, tired_value = 0):
 		"""
 		Triggers a face move animation.
 		"""
-		self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(100, 140)}, random.randint(500,1500), Time_Profiles.ease_in_out, dont_lock=True)
-
+		tired_addition = int(1000 * (1 / (1 + exp(-0.1 * (self.tired_value - 80)))))
+		self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(100, 140)}, random.randint(500+tired_addition, 1500+tired_addition) + tired_addition, Time_Profiles.ease_in_out, dont_lock=True)
 	def trigger_background(self):
 		"""
 		Triggers a background animation.
@@ -401,8 +401,6 @@ class Emotion:
 				AnimationBank.falling_asleep(self.State)
 
 
-
-	
 class Happy(Emotion):
 	def __init__(self, State, social_value=50, tired_value=50):
 		super().__init__(State, social_value, tired_value)
@@ -413,7 +411,10 @@ class Happy(Emotion):
 								"hue": 50, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out)
 
 	def _trigger_background(self):
-		Options = {'wink': 0.4, 'shake_yes': 0.4, 'dance': 0.2}
+		if self.tired_value < 0.8:
+			Options = {'wink': 0.4, 'shake_yes': 0.4, 'dance': 0.2}
+		else:
+			Options = {'wink': 0.75, 'shake_yes': 0.25}
 		choice = weighted_choice(list(Options.keys()), weights=Options.values())
 		print(f"Happy background animation: {choice}")
 		if choice == 'wink':
@@ -434,7 +435,8 @@ class Angry(Emotion):
 								"hue": 0, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out)
 
 	def _trigger_face_move(self):
-		self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(100, 130)}, random.randint(500,1000), Time_Profiles.ease_in_out, dont_lock=True)
+		tired_addition = int(1000 * (1 / (1 + exp(-0.1 * (self.tired_value - 80)))))
+		self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(100, 130)}, random.randint(500+tired_addition,1000+tired_addition), Time_Profiles.ease_in_out, dont_lock=True)
 
 	def _trigger_background(self):
 		Options = {'shake_no': 1}
@@ -462,7 +464,8 @@ class Sad(Emotion):
 		self.triggers['background'].change_function = lambda t: 1e-2*t**2
 
 	def _trigger_face_move(self):
-		self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(125, 150)}, random.randint(500,1000), Time_Profiles.ease_in_out, dont_lock=True)
+		tired_addition = int(1000 * (1 / (1 + exp(-0.1 * (self.tired_value - 80)))))
+		self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(125, 150)}, random.randint(500+tired_addition,1500+tired_addition), Time_Profiles.ease_in_out, dont_lock=True)
 
 	def _trigger_background(self):
 		Options = {'shake_no': 0.25, 'tear': 0.5, 'crying': 0.25}
