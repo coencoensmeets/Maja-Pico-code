@@ -607,7 +607,7 @@ class Sleeping(Emotion):
 		if choice == 'Z_particles':
 			for i in range(random.randint(6,10)):
 				saved_state = self.State.get_current_state(dont_lock=True)
-				Z_particle = Z((saved_state['x']+45, saved_state['y']+10, -pi/4))
+				Z_particle = Z((saved_state['x']+45, saved_state['y']+20, -pi/4))
 				Z_particle.scale(random.randint(20, 40)/100)
 				self.State.queue_particle(Z_particle, (i**1.6)*500, dont_lock=True)
 				del Z_particle
