@@ -6,6 +6,7 @@ from secrets import SSID, PASSWORD
 import machine
 
 import senko
+from Locker import ConditionalLock
 
 OTA = senko.Senko(
   user="coencoensmeets",
@@ -49,11 +50,37 @@ def main_thread():
 	connect_normal()
 
 def second_thread():
-	lock = _thread.allocate_lock()
-	lock.acquire(timetout=1)
 	for (i) in range(10):
 		print("Second thread-")
 		time.sleep(2)
 
-_thread.start_new_thread(second_thread, ())
-main_thread()
+class test_lock():
+	def __init__(self):
+		self.lock = _thread.allocate_lock()
+
+	def first_thread(self):
+		with ConditionalLock(self.lock, timeout=5000) as aquired:
+			if not aquired:
+				return
+			for (i) in range(6):
+				print("First thread-")
+				time.sleep(2)
+		print("First thread done")
+
+	def second_thread(self):
+		with ConditionalLock(self.lock, timeout=5000) as aquired:
+			if not aquired:
+				print("First thread failed to aquire lock")
+				return
+			for (i) in range(5):
+				print("Second thread-")
+				time.sleep(2)
+		print("Second thread done")
+
+test = test_lock()
+_thread.start_new_thread(test.first_thread, ())
+time.sleep(1)
+test.second_thread()
+time.sleep(10)
+# _thread.start_new_thread(second_thread, ())
+# main_thread()

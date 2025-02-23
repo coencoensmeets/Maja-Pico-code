@@ -93,12 +93,16 @@ class StateSync():
 		self.__lock = _thread.allocate_lock()
 
 	def set_block_get(self, block:bool=False):
-		with ConditionalLock(self.__lock):
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return
 			self.__block_get = block
 
 	def get(self, webserver):
 		result = webserver.get("all/maja")
-		with ConditionalLock(self.__lock):
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return
 			if not self.queue.check() and not self.__block_get:
 				success_value = result.get('success')
 				# if success_value:
@@ -118,7 +122,9 @@ class StateSync():
 		return result
 
 	def post(self, webserver):
-		with ConditionalLock(self.__lock): 
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return
 			queue_item = self.queue.get()
 			current_state = self.state.get_final_state().copy()
 			if queue_item:
@@ -204,7 +210,9 @@ class State():
 		Draws the face with the current configuration.
 		"""
 		new_status = status
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			if status:
 				self.__current_status.update(status)
 			else:
@@ -227,7 +235,10 @@ class State():
 		"""
 		Returns True if an animation is active or queued, False otherwise.
 		"""
-		with ConditionalLock(self.__lock):
+		# todo: Check if the False of aquired does not fuck with the thingy
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return False
 			return self.__animator.is_animation_active() or self.__particles_queue.running()
 
 	def trigger_animation(self, end_config, duration, timing_profile=Time_Profiles.linear, force = False, dont_lock=False):
@@ -238,7 +249,9 @@ class State():
 		:param duration: The duration of the animation in milliseconds.
 		:param timing_profile: The timing function used to interpolate the animation.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.__animator.trigger_animation(end_config, duration, timing_profile, force=force)
 
 	def trigger_wait_animation(self, duration, dont_lock=False):
@@ -247,7 +260,9 @@ class State():
 
 		:param duration: The duration of the wait period in milliseconds.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.__animator.trigger_wait_animation(duration)
 
 	def spawn_particle(self, particle, dont_lock=False):
@@ -256,11 +271,15 @@ class State():
 
 		:param particle: The particle to spawn.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.__particles_queue.add_particle(particle)
 
 	def queue_particle(self, particle, time_ms, dont_lock=False):
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.__particles_queue.queue_particle(particle, time_ms)
 
 
@@ -268,7 +287,9 @@ class State():
 		"""
 		Resets the animation queue and active status.
 		"""
-		with ConditionalLock(self.__lock):
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return
 			self.__animator.reset_queue()
 
 	def check_animation_triggers(self):
@@ -279,7 +300,9 @@ class State():
 		"""
 		Returns the current state.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.update_status_lamp()
 			return self.__current_status
 
@@ -287,7 +310,9 @@ class State():
 		"""
 		Returns the final configuration.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.update_status_lamp()
 			return self.__animator.get_final_status(self.__current_status)
 		
@@ -295,7 +320,9 @@ class State():
 		"""
 		Returns the final time.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			return self.__animator.get_final_time()
 		
 	def save_state(self):
