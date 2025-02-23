@@ -264,6 +264,13 @@ class AnimationBank():
 			if (i+1) < amount:
 				State.trigger_wait_animation(random.randint(500, 1500))
 
+	@staticmethod
+	def wake_up_fall_asleep(State):
+		saved_state = State.get_final_state(dont_lock=True)
+		State.trigger_animation({'eye_open': 1, 'y': saved_state['y']-20}, 200, Time_Profiles.ease_in, dont_lock=True)
+		State.trigger_wait_animation(1000, dont_lock=True)
+		State.trigger_animation({'eye_open': 0.1, 'y': saved_state['y']}, 2000, Time_Profiles.ease_in, dont_lock=True)
+
 class Trigger:
 	"""
 	A class used to manage and execute triggers for animations based on time and random chance.
@@ -568,10 +575,27 @@ class Love(Emotion):
 				self.State.queue_particle(heart, (i**1.4)*100, dont_lock=True)
 				del heart
 		
+class Sleeping(Emotion):
+	def __init__(self, State, social_value=50, tired_value=50):
+		super().__init__(State, social_value, tired_value)
+		self.name = "sleeping"
+
+		self.State.trigger_animation({'x': 120, "y": 150,
+								'eye_open': 0.1, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.1, 
+								'smile': 0,'cheeks' : 0, 'smirk': 0, 'mouth_width': 40, 'yawn': 0,
+								"hue": 0, "saturation": 0, "value": 0}, 3000, Time_Profiles.ease_in_out)
+		
+	def _update_parameters(self):
+		self.triggers['blink'].change_function = lambda t: 0
+		self.triggers['face_move'].change_function = lambda t: 0
+		self.triggers['tired'].change_function = lambda t:  0
+
+	def _trigger_background(self):
+		AnimationBank.wake_up_fall_asleep(self.State)
 
 class start_up(Emotion):
 	def __init__(self, State, social_value=50, tired_value=50):
 		super().__init__(State, social_value, tired_value)
 		self.name = "start_up"
 
-EMOTIONS = {'happy': Happy, 'angry': Angry, 'sad': Sad, 'okay': Okay, 'love': Love, 'horny': Horny}
+EMOTIONS = {'happy': Happy, 'angry': Angry, 'sad': Sad, 'okay': Okay, 'love': Love, 'horny': Horny, 'sleeping': Sleeping}
