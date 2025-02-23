@@ -93,12 +93,12 @@ class StateSync():
 		self.__lock = _thread.allocate_lock()
 
 	def set_block_get(self, block:bool=False):
-		with self.__lock:
+		with ConditionalLock(self.__lock):
 			self.__block_get = block
 
 	def get(self, webserver):
 		result = webserver.get("all/maja")
-		with self.__lock:
+		with ConditionalLock(self.__lock):
 			if not self.queue.check() and not self.__block_get:
 				success_value = result.get('success')
 				# if success_value:
@@ -118,7 +118,7 @@ class StateSync():
 		return result
 
 	def post(self, webserver):
-		with self.__lock: 
+		with ConditionalLock(self.__lock): 
 			queue_item = self.queue.get()
 			current_state = self.state.get_final_state().copy()
 			if queue_item:

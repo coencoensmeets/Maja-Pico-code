@@ -49,9 +49,11 @@ def main_thread():
 	connect_normal()
 
 def second_thread():
+	lock = _thread.allocate_lock()
+	lock.acquire(timetout=1)
 	for (i) in range(10):
 		print("Second thread-")
 		time.sleep(2)
 
-# _thread.start_new_thread(second_thread, ())
+_thread.start_new_thread(second_thread, ())
 main_thread()
