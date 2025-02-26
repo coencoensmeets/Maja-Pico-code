@@ -327,10 +327,6 @@ class State():
 		
 	def save_state(self):
 		self.update_status_lamp()
-		del self.face
-		del self.__animator
-		del self.__particles_queue
-		del self.Lights
 		gc.collect()
 		print("Waiting")
 		sleep(2)
