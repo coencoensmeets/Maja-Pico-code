@@ -331,7 +331,10 @@ class State():
 		print("Waiting")
 		sleep(2)
 		print(f"Test: {self.__current_status}")
-		os.remove('state.json')
+		try:
+			os.remove('state.json')
+		except OSError as e:
+			print("state.json file does not exist, skipping removal.")
 		print("Waiting")
 		sleep(2)
 		gc.collect()
