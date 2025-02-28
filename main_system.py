@@ -141,11 +141,12 @@ class main_system():
 		touch_manager = TouchManager()
 		up_periodic = Periodic(func=self.__still_up, freq=1/10)
 		Hue_Changing = False
+		touch_state = {"left": 0, "right": 0}  # Initialize with 0 for none
 
 		while self.WD.running():
 			up_periodic.call_func()
 			self.WD.update('sensor')
-			touch_state = touch_manager.update_and_manage_state()
+			touch_manager.update_and_manage_state(touch_state)
 
 			if Hue_Changing and touch_state['left'] < 1000:
 				Hue_Changing = False
@@ -158,6 +159,7 @@ class main_system():
 				self.state.draw_state()
 
 			if touch_state['left'] == -2: #State: toggle light (Double touch right)
+				print("Light action: Toggle")
 				colour = self.LEDS.get_hsv()
 				print(f"Colour: {colour}")
 				if colour[2] == 0:
@@ -169,6 +171,7 @@ class main_system():
 					self.state.trigger_animation({"value": 0}, TOGGLE_TIME, Time_Profiles.ease_out, force=True)
 					self.state_sync.queue.add({'value': 0})
 			elif touch_state['left'] > 1000: #State: Change colour (Hold right)
+				print("Light action: Change colour")
 				if not Hue_Changing:
 					Hue_Changing = True
 					self.state_sync.set_block_get(True)
@@ -176,17 +179,18 @@ class main_system():
 					if colour[1] != 1 or colour[2] != 1:
 						self.state.trigger_animation({"saturation": 1, "value": 1}, TOGGLE_TIME, Time_Profiles.ease_in, force=True)
 				self.LEDS.increase_hue(360/4)
-
 			elif touch_state['right'] == -2: #State: Change brightness (Double tap right)
+				print("Light action: Change brightness")
 				self.state.face.screen_toggle()
 				self.state_sync.queue.add({'screen_on': 0})
 			elif touch_state['right'] == -5: #State: Reset (Coding) (Hold left)
+				print("Resetting secrets!")
 				Secrets().reset_secrets()
 				print(f"Secrets reset! Restarting in 2s")
 				sleep(2)
 				self.WD.kill()
-
 			elif touch_state['left'] == -5: #State: Reset (Double tap left)
+				print("Resetting state!")
 				gc.collect()
 				sleep(2)
 				print("Start renaming boot.py")
@@ -206,28 +210,22 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		update_period = Periodic(func=self.__update, freq=1/(5*60))
+		update_period = Periodic(func=self.__update, freq=1/(24*60*60))
 
 		get_failed_count = 0
 
 		while self.WD.running():
 			t_start = ticks_ms()
-			print("1")
 			self.WD.update('main')
 			self.dht20.measure()
 			garbage_periodic.call_func()
-			print("2")
 
 			if not self.ws.isconnected():
 				Success = self.ws.connect()
 				if not Success:
 					self.WD.kill()
-
-			print("3")
 			
 			update_period.call_func()
-
-			print("4")
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
@@ -236,8 +234,6 @@ class main_system():
 					dht20_periodic.bypass_timing = True
 					print("Run next time!")
 				print(f"(Main): {server_return}")
-
-			print("5")
 
 			gc.collect()
 			server_return = light_periodic.call_func()
@@ -257,16 +253,10 @@ class main_system():
 				elif get_failed_count > 0:
 					get_failed_count = 0
 
-			print("6")
-
 			if self.state_sync.queue.check():
 				self.state_sync.post(webserver=self.ws)
 
-			print("7")
-
 			animation_periodic.call_func()
-
-			print("8")
 
 			t_end = ticks_ms()
 			if (ticks_diff(t_end, t_start) < 2000):

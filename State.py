@@ -100,9 +100,12 @@ class StateSync():
 
 	def get(self, webserver):
 		result = webserver.get("all/maja")
+		print("In front of lock")
 		with ConditionalLock(self.__lock) as aquired:
 			if not aquired:
 				return
+			
+			print("Through Lock")
 			if not self.queue.check() and not self.__block_get:
 				success_value = result.get('success')
 				# if success_value:
@@ -118,7 +121,8 @@ class StateSync():
 					if result_time > self.time_saved:
 						self.time_saved = result_time
 						self.__change_light(result['light_data'], force=self.time_saved==datetime(2022, 7, 10))
-					
+		
+		print("Result: ", result)			
 		return result
 
 	def post(self, webserver):

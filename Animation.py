@@ -595,7 +595,7 @@ class Sleeping(Emotion):
 		self.triggers['tired'].change_function = lambda t:  0
 
 	def _trigger_face_move(self):
-		self.State.trigger_animation({'y': random.randint(110,130)}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
+		self.State.trigger_animation({'x': 120, 'y': random.randint(110,130)}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
 		self.State.trigger_animation({'y': 150}, random.randint(4000,6000), Time_Profiles.ease_in_out, dont_lock=True)
 
 	def _trigger_background(self):
