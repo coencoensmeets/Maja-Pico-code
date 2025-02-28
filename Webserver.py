@@ -136,7 +136,6 @@ class Webserver():
 		)
 
 		print("2")
-		print(f"Host: {host}")
 		try:
 			gc.collect()
 			print("2.5")
@@ -146,6 +145,7 @@ class Webserver():
 			sock = socket.socket()
 			sock.settimeout(10)
 			sock.connect(addr)
+			print("2.75")
 
 			sock.send(request.encode())
 

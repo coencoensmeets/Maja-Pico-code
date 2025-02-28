@@ -120,9 +120,7 @@ class StateSync():
 					result_time = datetime.fromisoformat(result['light_data']['time'])
 					if result_time > self.time_saved:
 						self.time_saved = result_time
-						self.__change_light(result['light_data'], force=self.time_saved==datetime(2022, 7, 10))
-		
-		print("Result: ", result)			
+						self.__change_light(result['light_data'], force=self.time_saved==datetime(2022, 7, 10))		
 		return result
 
 	def post(self, webserver):
