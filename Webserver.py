@@ -32,7 +32,7 @@ class Webserver():
 		post(self, subdomain, data): Initiates a POST request to a specified subdomain with given data.
 	"""
 
-	def __init__(self, user_id, ssid, password, base = 'http://coencoensmeets.pythonanywhere.com/Send/', version = "-1"):
+	def __init__(self, user_id, ssid, password, base = 'https://thomasbendington.pythonanywhere.com', version = "-1"):
 		"""
 		Initializes a new Webserver instance with user credentials and WiFi settings.
 
@@ -40,7 +40,7 @@ class Webserver():
 			user_id (str): The unique identifier for the user.
 			ssid (str): The SSID of the WiFi network to connect to.
 			password (str): The password for the WiFi network.
-			base (str, optional): The base URL for the webserver. Defaults to 'http://coencoensmeets.pythonanywhere.com/Send/'.
+			base (str, optional): The base URL for the webserver. Defaults to 'https://thomasbendington.pythonanywhere.com'.
 		"""
 		self.__base_url = base
 		self.__user_id = user_id
@@ -106,78 +106,140 @@ class Webserver():
 		self.__wlan.active(False)
 		print("Wifi disconnected")
 
-	def get(self, subdomain:str, data:dict=None):
+	def get(self, subdomain: str, data: dict = None):
 		"""
-		Initiates a POST (to get data) request to a specified subdomain with optional data.
+		Initiates a POST (to get data) request to a specified subdomain with optional data using raw sockets.
 
 		Parameters:
 			subdomain (str): The subdomain to append to the base URL for the POST request.
 			data (dict, optional): Additional data to be sent with the POST request. Defaults to None.
 		"""
-		url = self.__base_url + f"/api/v1/{subdomain}/get"
-		headers = {'Content-Type': 'application/json'}
+		url = self.__base_url
+		host = url.replace("http://", "").replace("https://", "").split("/")[0]  # Extract domain
+		path = f"/api/v1/{subdomain}/get"
+		port = 80  # Change to 443 for HTTPS (MicroPython lacks native TLS)
+
 		print("1")
-		if data is not None:
-			data['user_id'] = self.__user_id
-		else:
-			data = {'user_id': self.__user_id}
+		if data is None:
+			data = {}
+		data['user_id'] = self.__user_id
 		data['version'] = self.__version
-		# print(f"(GET) url: {url}, data: {data}")
+		json_data = json.dumps(data)
+
+		request = (
+			f"POST {path} HTTP/1.1\r\n"
+			f"Host: {host}\r\n"
+			f"Content-Type: application/json\r\n"
+			f"Content-Length: {len(json_data)}\r\n"
+			f"Connection: close\r\n\r\n"
+			f"{json_data}"
+		)
+
 		print("2")
+		print(f"Host: {host}")
 		try:
 			gc.collect()
-			# print(f'Data left: {gc.mem_free()}')
 			print("2.5")
-			response = rq.post(url, json=data, headers=headers, timeout = 10)
-			print("3")
-			if response is None:
-				print("Failed to get data: No response")
-				return_data = {'success': False, 'message': 'No response'}
-			elif response.status_code < 200 or response.status_code >= 300:
-				print(f"Failed to get data: HTTP {response.status_code}")
-				return_data = {'success': False, 'message': f'HTTP {response.status_code}'}
-			else:
-				return_data = response.json()
-			print("4")
-			response.close()
-		except Exception as e:
-			# print(f"Error: {e}")
-			# if not('ENOMEM' in str(e)):
-			# 	print(f"Failed to get data: {e}")
-			return_data = {'success': False, 'message': str(e)}
 
-		print("5")
-		return return_data
-		
-	def post(self, subdomain:str, data:dict)->dict:
+			# Open socket connection
+			addr = socket.getaddrinfo(host, port)[0][-1]
+			sock = socket.socket()
+			sock.settimeout(10)
+			sock.connect(addr)
+
+			sock.send(request.encode())
+
+			print("3")
+
+			response = b""
+			while True:
+				chunk = sock.recv(1024)
+				if not chunk:
+					break
+				response += chunk
+			sock.close()
+			print("4")
+
+			response_str = response.decode()
+			headers, body = response_str.split("\r\n\r\n", 1)
+
+			# Check HTTP status code
+			status_line = headers.split("\r\n")[0]
+			status_code = int(status_line.split(" ")[1])
+			if status_code < 200 or status_code >= 300:
+				print(f"Failed to get data: HTTP {status_code}")
+				return {'success': False, 'message': f'HTTP {status_code}'}
+
+			return json.loads(body)
+
+		except Exception as e:
+			print(f"Failed to get data: {e}")
+			return {'success': False, 'message': str(e)}
+
+	def post(self, subdomain: str, data: dict) -> dict:
 		"""
-		Initiates a POST request to a specified subdomain with given data.
+		Initiates a POST request to a specified subdomain with given data using raw sockets.
 
 		Parameters:
 			subdomain (str): The subdomain to append to the base URL for the POST request.
 			data (dict): The data to be sent in the POST request.
+
+		Returns:
+			dict: The response from the server in JSON format or an error message.
 		"""
-		url = self.__base_url + f"/api/v1/{subdomain}/post"
-		headers = {'Content-Type': 'application/json'}
-		data['user_id'] = self.__user_id  # Add 'user_id' to the data
-		# todo: Replace with version number
+		url = self.__base_url
+		host = url.replace("http://", "").replace("https://", "").split("/")[0]  # Extract domain
+		path = f"/api/v1/{subdomain}/post"
+		port = 80  # Change to 443 for HTTPS (MicroPython lacks native TLS)
+
+		# Add required fields
+		data['user_id'] = self.__user_id
 		data['version'] = self.__version
+		json_data = json.dumps(data)
+
+		request = (
+			f"POST {path} HTTP/1.1\r\n"
+			f"Host: {host}\r\n"
+			f"Content-Type: application/json\r\n"
+			f"Content-Length: {len(json_data)}\r\n"
+			f"Connection: close\r\n\r\n"
+			f"{json_data}"
+		)
+
 		try:
 			gc.collect()
-			response = rq.post(url, json=data, headers=headers, timeout=10)  # Make POST request
-			if response is None:
-				print("Failed to post data: No response")
-				return_data = {'success': False, 'message': 'No response'}
-			elif response.status_code < 200 or response.status_code >= 300:
-				print(f"Failed to post data: HTTP {response.status_code}")
-				return_data = {'success': False, 'message': f'HTTP {response.status_code}'}
-			else:
-				return_data =  response.json()
-			response.close()
-		except Exception as e:
-			return_data = {'success': False, 'message': str(e)}
 
-		return return_data
+			addr = socket.getaddrinfo(host, port)[0][-1]
+			sock = socket.socket()
+			sock.settimeout(10)
+			sock.connect(addr)
+
+			sock.send(request.encode())
+
+			response = b""
+			while True:
+				chunk = sock.recv(1024)
+				if not chunk:
+					break
+				response += chunk
+
+			sock.close()
+
+			response_str = response.decode()
+			headers, body = response_str.split("\r\n\r\n", 1)
+
+			status_line = headers.split("\r\n")[0]
+			status_code = int(status_line.split(" ")[1])
+			if status_code < 200 or status_code >= 300:
+				print(f"Failed to post data: HTTP {status_code}")
+				return {'success': False, 'message': f'HTTP {status_code}'}
+
+			return json.loads(body)
+
+		except Exception as e:
+			print(f"Failed to post data: {e}")
+			return {'success': False, 'message': str(e)}
+
 
 	def test_connection(self):
 		"""
@@ -189,16 +251,18 @@ class Webserver():
 			bool: True if the connection test is successful, False otherwise.
 		"""
 		try:
-			response = rq.get("http://www.example.com", timeout=4)
-			if response.status_code == 200:
+			time_start = time.ticks_ms()
+			response = self.get("all/maja")
+			print(f"Time to get: {time.ticks_ms()-time_start}")
+			if response.get('success', False):
+				print(f"Response: {response}")
 				print("Connection test successful")
 				return True
 			else:
 				print("Connection test failed")
 				return False
-		except Exception as err:
-			print("Error testing connection:", err)
-			return False
+		except Exception as e:
+			print(f"Connection test failed: {e}")
 		
 html_success = """<!DOCTYPE html>
 <html>
@@ -407,9 +471,9 @@ class Secrets():
 		machine.reset()
 
 if __name__ == "__main__":
-	# ws = Webserver(id=1, ssid = "Ziggo5483466", password="zh6vjQxpBxjt")
-	# ws.connect()
-	# ws.test_connection()
-	# ws.disconnect()
-	print(f"Secrets: {Secrets().get_secrets()}")
-	Test = Local_Server(Lights(N=8, brightness=1, pin=machine.Pin(2)))
+	ws = Webserver(user_id=1, ssid = "Ziggo5483466", password="zh6vjQxpBxjt")
+	ws.connect()
+	ws.test_connection()
+	ws.disconnect()
+	# print(f"Secrets: {Secrets().get_secrets()}")
+	# Test = Local_Server(Lights(N=8, brightness=1, pin=machine.Pin(2)))

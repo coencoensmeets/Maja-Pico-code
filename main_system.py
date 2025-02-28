@@ -259,8 +259,6 @@ class main_system():
 			animation_periodic.call_func()
 
 			t_end = ticks_ms()
-			if (ticks_diff(t_end, t_start) < 2000):
-				sleep_ms(2000-ticks_diff(t_end, t_start))
 			print(f"Time taken (Server loop): {ticks_diff(t_end, t_start)}")
 		print("Server thread is going to kill the sensor thread!")
 		self.WD.kill()
