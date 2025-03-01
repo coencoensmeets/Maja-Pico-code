@@ -76,7 +76,7 @@ class StatusAnimator:
 		Resets the animation queue and active animations.
 		"""
 		self.animation_queue = []
-		self.active_animations = []
+		self.active_animations = {}
 
 	def is_animation_active(self):
 		"""

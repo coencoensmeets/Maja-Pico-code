@@ -107,7 +107,9 @@ class StateSync():
 			
 			print("Through Lock")
 			if not self.queue.check() and not self.__block_get:
+				print("1")
 				success_value = result.get('success')
+				print("2")
 				# if success_value:
 				# 	print(get_user_id(list(result['mood_data'].keys()), self.user_id))
 				if success_value and all(key in result for key in ['light_data', 'mood_data', 'screen_data']):
@@ -118,9 +120,11 @@ class StateSync():
 						self.state.face.screen_turn(result['screen_data']['screen_on'])
 						
 					result_time = datetime.fromisoformat(result['light_data']['time'])
+					print(f"test time: {result_time} - {self.time_saved} - {result_time > self.time_saved}")
 					if result_time > self.time_saved:
 						self.time_saved = result_time
-						self.__change_light(result['light_data'], force=self.time_saved==datetime(2022, 7, 10))		
+						self.__change_light(result['light_data'], force=self.time_saved==datetime(2022, 7, 10))
+				print("3")
 		return result
 
 	def post(self, webserver):
@@ -166,7 +170,7 @@ class StateSync():
 
 		if changes != {}:
 			print(f"GET changes; {changes}")
-			self.state.trigger_animation(changes, CHANGE_TIME, Time_Profiles.ease_in, force=force)
+			self.state.trigger_animation(changes, CHANGE_TIME, Time_Profiles.ease_in, force=True)
 		
 	def __change_face(self, result):
 		self.state.Emotion.update(emotion=result['mood'], social_value=result['social_value'], tired_value=result['tired_value'])

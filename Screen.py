@@ -109,6 +109,8 @@ class Screen():
 
 		# gc.collect()
 		try:
+			del self.bitmap
+			gc.collect()
 			self.bitmap = self.__screen_drawer.get_bitmap((COLOURS['BLACK'], COLOURS['WHITE'], COLOURS['PINK'], COLOURS['BLUE']))
 			# print(f"Bitmap: {len(self.bitmap['BOUNDING'])}")
 			if len(self.bitmap['BOUNDING']) > 0:

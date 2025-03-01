@@ -2,7 +2,6 @@ import network
 import time
 import json
 import gc
-import urequests as rq
 import socket
 from Light import Lights
 import machine
@@ -32,7 +31,7 @@ class Webserver():
 		post(self, subdomain, data): Initiates a POST request to a specified subdomain with given data.
 	"""
 
-	def __init__(self, user_id, ssid, password, base = 'https://thomasbendington.pythonanywhere.com', version = "-1"):
+	def __init__(self, user_id, ssid, password, base='https://thomasbendington.pythonanywhere.com', version="-1"):
 		"""
 		Initializes a new Webserver instance with user credentials and WiFi settings.
 
@@ -72,7 +71,7 @@ class Webserver():
 			self.__wlan.disconnect()
 			time.sleep(SLEEP_TIME)
 		time.sleep_ms(500)
-		for i in range(0,5):
+		for i in range(0, 5):
 			try:
 				self.__wlan.connect(self.__ssid, self.__password)
 				break
@@ -80,14 +79,13 @@ class Webserver():
 				if i == 4:
 					print("Failed to connect to network")
 					return False
-					# raise Exception("Failed to connect to network")
 				time.sleep(RETRY_INTERVAL)
 		self.__wlan.config(pm=0xa11140)
-		while not (self.__wlan.isconnected()) and (time.time()-t_start<MAX_DELTA_T):
-			print(f"Connecting to network: {time.time()-t_start}/20s", end="\r")
+		while not (self.__wlan.isconnected()) and (time.time() - t_start < MAX_DELTA_T):
+			print(f"Connecting to network: {time.time() - t_start}/20s", end="\r")
 			time.sleep(1)
 		print("")
-	
+
 		del t_start
 		is_connected = self.__wlan.isconnected()
 		if is_connected:
@@ -136,6 +134,7 @@ class Webserver():
 		)
 
 		print("2")
+		sock = None
 		try:
 			gc.collect()
 			print("2.5")
@@ -157,7 +156,6 @@ class Webserver():
 				if not chunk:
 					break
 				response += chunk
-			sock.close()
 			print("4")
 
 			response_str = response.decode()
@@ -169,12 +167,18 @@ class Webserver():
 			if status_code < 200 or status_code >= 300:
 				print(f"Failed to get data: HTTP {status_code}")
 				return {'success': False, 'message': f'HTTP {status_code}'}
-
+			
 			return json.loads(body)
 
 		except Exception as e:
 			print(f"Failed to get data: {e}")
 			return {'success': False, 'message': str(e)}
+
+		finally:
+			if sock and isinstance(sock, socket.socket):
+				sock.close()
+				del sock
+			gc.collect()
 
 	def post(self, subdomain: str, data: dict) -> dict:
 		"""
@@ -206,6 +210,7 @@ class Webserver():
 			f"{json_data}"
 		)
 
+		sock = None
 		try:
 			gc.collect()
 
@@ -223,8 +228,6 @@ class Webserver():
 					break
 				response += chunk
 
-			sock.close()
-
 			response_str = response.decode()
 			headers, body = response_str.split("\r\n\r\n", 1)
 
@@ -240,6 +243,11 @@ class Webserver():
 			print(f"Failed to post data: {e}")
 			return {'success': False, 'message': str(e)}
 
+		finally:
+			if sock and isinstance(sock, socket.socket):
+				sock.close()
+				del sock
+			gc.collect()
 
 	def test_connection(self):
 		"""
@@ -253,7 +261,7 @@ class Webserver():
 		try:
 			time_start = time.ticks_ms()
 			response = self.get("all/maja")
-			print(f"Time to get: {time.ticks_ms()-time_start}")
+			print(f"Time to get: {time.ticks_ms() - time_start}")
 			if response.get('success', False):
 				print(f"Response: {response}")
 				print("Connection test successful")
@@ -263,6 +271,9 @@ class Webserver():
 				return False
 		except Exception as e:
 			print(f"Connection test failed: {e}")
+			return False
+		finally:
+			gc.collect()
 		
 html_success = """<!DOCTYPE html>
 <html>
