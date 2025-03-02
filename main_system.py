@@ -42,6 +42,7 @@ class ResetDetector():
 class main_system():
 	def __init__(self, safety_switch=True):
 		gc.collect()
+		micropython.alloc_emergency_exception_buf(100)
 		self.LEDS = Lights(N=8, brightness=1, pin=machine.Pin(12))
 		self.state = State(self.LEDS)
 
@@ -88,8 +89,11 @@ class main_system():
 		with self.__lock:
 			print("Start disconnecting")
 			self.ws.disconnect()
+			self.WD.update_WDT()
 			print("Start save state")
+			print(f"Memory: {micropython.mem_info(0)}")
 			self.state.save_state()
+			self.WD.update_WDT()
 			print("Ended safe state\n Start set reset")
 			print(f"Memory: {micropython.mem_info(1)}")
 			ResetDetector().set_reset()
@@ -122,7 +126,7 @@ class main_system():
 		OTA = senko.Senko(
 			user="coencoensmeets",
 			repo="Maja-Pico-code",
-			branch="develop",
+			branch="feature/Tired",
 			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
 			debug = True,
 			working_dir = None
@@ -141,11 +145,12 @@ class main_system():
 		touch_manager = TouchManager()
 		up_periodic = Periodic(func=self.__still_up, freq=1/10)
 		Hue_Changing = False
+		touch_state = {"left": 0, "right": 0}  # Initialize with 0 for none
 
 		while self.WD.running():
 			up_periodic.call_func()
 			self.WD.update('sensor')
-			touch_state = touch_manager.update_and_manage_state()
+			touch_manager.update_and_manage_state(touch_state)
 
 			if Hue_Changing and touch_state['left'] < 1000:
 				Hue_Changing = False
@@ -158,6 +163,7 @@ class main_system():
 				self.state.draw_state()
 
 			if touch_state['left'] == -2: #State: toggle light (Double touch right)
+				print("Light action: Toggle")
 				colour = self.LEDS.get_hsv()
 				print(f"Colour: {colour}")
 				if colour[2] == 0:
@@ -169,6 +175,7 @@ class main_system():
 					self.state.trigger_animation({"value": 0}, TOGGLE_TIME, Time_Profiles.ease_out, force=True)
 					self.state_sync.queue.add({'value': 0})
 			elif touch_state['left'] > 1000: #State: Change colour (Hold right)
+				print("Light action: Change colour")
 				if not Hue_Changing:
 					Hue_Changing = True
 					self.state_sync.set_block_get(True)
@@ -176,17 +183,18 @@ class main_system():
 					if colour[1] != 1 or colour[2] != 1:
 						self.state.trigger_animation({"saturation": 1, "value": 1}, TOGGLE_TIME, Time_Profiles.ease_in, force=True)
 				self.LEDS.increase_hue(360/4)
-
 			elif touch_state['right'] == -2: #State: Change brightness (Double tap right)
+				print("Light action: Change brightness")
 				self.state.face.screen_toggle()
 				self.state_sync.queue.add({'screen_on': 0})
 			elif touch_state['right'] == -5: #State: Reset (Coding) (Hold left)
+				print("Resetting secrets!")
 				Secrets().reset_secrets()
 				print(f"Secrets reset! Restarting in 2s")
-				time.sleep(2)
+				sleep(2)
 				self.WD.kill()
-
 			elif touch_state['left'] == -5: #State: Reset (Double tap left)
+				print("Resetting state!")
 				gc.collect()
 				sleep(2)
 				print("Start renaming boot.py")
@@ -206,7 +214,7 @@ class main_system():
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
 		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		update_period = Periodic(func=self.__update, freq=1/(10*60))
+		update_period = Periodic(func=self.__update, freq=1/(24*60*60))
 
 		get_failed_count = 0
 
@@ -220,8 +228,8 @@ class main_system():
 				Success = self.ws.connect()
 				if not Success:
 					self.WD.kill()
-
-			# update_period.call_func()
+			
+			update_period.call_func()
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
@@ -255,8 +263,6 @@ class main_system():
 			animation_periodic.call_func()
 
 			t_end = ticks_ms()
-			if (ticks_diff(t_end, t_start) < 2000):
-				sleep_ms(2000-ticks_diff(t_end, t_start))
 			print(f"Time taken (Server loop): {ticks_diff(t_end, t_start)}")
 		print("Server thread is going to kill the sensor thread!")
 		self.WD.kill()

@@ -93,12 +93,16 @@ class StateSync():
 		self.__lock = _thread.allocate_lock()
 
 	def set_block_get(self, block:bool=False):
-		with self.__lock:
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return
 			self.__block_get = block
 
 	def get(self, webserver):
 		result = webserver.get("all/maja")
-		with self.__lock:
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return
 			if not self.queue.check() and not self.__block_get:
 				success_value = result.get('success')
 				# if success_value:
@@ -114,11 +118,12 @@ class StateSync():
 					if result_time > self.time_saved:
 						self.time_saved = result_time
 						self.__change_light(result['light_data'], force=self.time_saved==datetime(2022, 7, 10))
-					
 		return result
 
 	def post(self, webserver):
-		with self.__lock: 
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return
 			queue_item = self.queue.get()
 			current_state = self.state.get_final_state().copy()
 			if queue_item:
@@ -158,7 +163,7 @@ class StateSync():
 
 		if changes != {}:
 			print(f"GET changes; {changes}")
-			self.state.trigger_animation(changes, CHANGE_TIME, Time_Profiles.ease_in, force=force)
+			self.state.trigger_animation(changes, CHANGE_TIME, Time_Profiles.ease_in, force=True)
 		
 	def __change_face(self, result):
 		self.state.Emotion.update(emotion=result['mood'], social_value=result['social_value'], tired_value=result['tired_value'])
@@ -204,16 +209,18 @@ class State():
 		Draws the face with the current configuration.
 		"""
 		new_status = status
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			if status:
 				self.__current_status.update(status)
 			else:
 				new_status = self.__animator.animate_status(self.__current_status)
 				Changed = False
 				for keys in new_status.keys():
-					if self.__current_status[keys] != new_status[keys]:
+					if self.__current_status.get(keys, None) != new_status.get(keys, None):
 						Changed = True
-					self.__current_status[keys] = new_status[keys]
+					self.__current_status[keys] = new_status.get(keys, self.__current_status.get(keys, None))
 				
 				if not Changed and not self.__particles_queue.running():
 					return
@@ -227,7 +234,10 @@ class State():
 		"""
 		Returns True if an animation is active or queued, False otherwise.
 		"""
-		with ConditionalLock(self.__lock):
+		# todo: Check if the False of aquired does not fuck with the thingy
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return False
 			return self.__animator.is_animation_active() or self.__particles_queue.running()
 
 	def trigger_animation(self, end_config, duration, timing_profile=Time_Profiles.linear, force = False, dont_lock=False):
@@ -238,7 +248,9 @@ class State():
 		:param duration: The duration of the animation in milliseconds.
 		:param timing_profile: The timing function used to interpolate the animation.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.__animator.trigger_animation(end_config, duration, timing_profile, force=force)
 
 	def trigger_wait_animation(self, duration, dont_lock=False):
@@ -247,7 +259,9 @@ class State():
 
 		:param duration: The duration of the wait period in milliseconds.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.__animator.trigger_wait_animation(duration)
 
 	def spawn_particle(self, particle, dont_lock=False):
@@ -256,11 +270,15 @@ class State():
 
 		:param particle: The particle to spawn.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.__particles_queue.add_particle(particle)
 
 	def queue_particle(self, particle, time_ms, dont_lock=False):
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.__particles_queue.queue_particle(particle, time_ms)
 
 
@@ -268,7 +286,9 @@ class State():
 		"""
 		Resets the animation queue and active status.
 		"""
-		with ConditionalLock(self.__lock):
+		with ConditionalLock(self.__lock) as aquired:
+			if not aquired:
+				return
 			self.__animator.reset_queue()
 
 	def check_animation_triggers(self):
@@ -279,7 +299,9 @@ class State():
 		"""
 		Returns the current state.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.update_status_lamp()
 			return self.__current_status
 
@@ -287,7 +309,9 @@ class State():
 		"""
 		Returns the final configuration.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			self.update_status_lamp()
 			return self.__animator.get_final_status(self.__current_status)
 		
@@ -295,7 +319,9 @@ class State():
 		"""
 		Returns the final time.
 		"""
-		with ConditionalLock(self.__lock, not dont_lock):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
 			return self.__animator.get_final_time()
 		
 	def save_state(self):
@@ -304,7 +330,10 @@ class State():
 		print("Waiting")
 		sleep(2)
 		print(f"Test: {self.__current_status}")
-		os.remove('state.json')
+		try:
+			os.remove('state.json')
+		except OSError as e:
+			print("state.json file does not exist, skipping removal.")
 		print("Waiting")
 		sleep(2)
 		gc.collect()
