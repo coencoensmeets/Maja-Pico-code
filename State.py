@@ -100,16 +100,11 @@ class StateSync():
 
 	def get(self, webserver):
 		result = webserver.get("all/maja")
-		print("In front of lock")
 		with ConditionalLock(self.__lock) as aquired:
 			if not aquired:
 				return
-			
-			print("Through Lock")
 			if not self.queue.check() and not self.__block_get:
-				print("1")
 				success_value = result.get('success')
-				print("2")
 				# if success_value:
 				# 	print(get_user_id(list(result['mood_data'].keys()), self.user_id))
 				if success_value and all(key in result for key in ['light_data', 'mood_data', 'screen_data']):
@@ -120,11 +115,9 @@ class StateSync():
 						self.state.face.screen_turn(result['screen_data']['screen_on'])
 						
 					result_time = datetime.fromisoformat(result['light_data']['time'])
-					print(f"test time: {result_time} - {self.time_saved} - {result_time > self.time_saved}")
 					if result_time > self.time_saved:
 						self.time_saved = result_time
 						self.__change_light(result['light_data'], force=self.time_saved==datetime(2022, 7, 10))
-				print("3")
 		return result
 
 	def post(self, webserver):

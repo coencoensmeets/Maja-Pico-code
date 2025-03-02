@@ -89,11 +89,13 @@ class main_system():
 		with self.__lock:
 			print("Start disconnecting")
 			self.ws.disconnect()
+			self.WD.update_WDT()
 			print("Start save state")
 			print(f"Memory: {micropython.mem_info(0)}")
 			self.state.save_state()
+			self.WD.update_WDT()
 			print("Ended safe state\n Start set reset")
-			print(f"Memory: {micropython.mem_info(0)}")
+			print(f"Memory: {micropython.mem_info(1)}")
 			ResetDetector().set_reset()
 			print(f"Killing all threads! (wait 2s)")
 			sleep_ms(2000)
@@ -217,21 +219,17 @@ class main_system():
 		get_failed_count = 0
 
 		while self.WD.running():
-			print("1")
 			t_start = ticks_ms()
 			self.WD.update('main')
 			self.dht20.measure()
 			garbage_periodic.call_func()
-			print("2")
 
 			if not self.ws.isconnected():
 				Success = self.ws.connect()
 				if not Success:
 					self.WD.kill()
-			print("3")
 			
 			update_period.call_func()
-			print("4")
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
@@ -240,8 +238,6 @@ class main_system():
 					dht20_periodic.bypass_timing = True
 					print("Run next time!")
 				print(f"(Main): {server_return}")
-			
-			print("5")
 
 			gc.collect()
 			server_return = light_periodic.call_func()
@@ -263,8 +259,6 @@ class main_system():
 
 			if self.state_sync.queue.check():
 				self.state_sync.post(webserver=self.ws)
-			
-			print("Memory free: ", gc.mem_free())
 
 			animation_periodic.call_func()
 
@@ -278,5 +272,5 @@ class main_system():
 		print("Memory free:", gc.mem_free(), "bytes")
 
 if __name__ == '__main__':
-	system = main_system(safety_switch=True)
+	system = main_system(safety_switch=False)
 	system.start_threads()

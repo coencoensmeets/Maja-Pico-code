@@ -117,7 +117,6 @@ class Webserver():
 		path = f"/api/v1/{subdomain}/get"
 		port = 80  # Change to 443 for HTTPS (MicroPython lacks native TLS)
 
-		print("1")
 		if data is None:
 			data = {}
 		data['user_id'] = self.__user_id
@@ -133,22 +132,17 @@ class Webserver():
 			f"{json_data}"
 		)
 
-		print("2")
 		sock = None
 		try:
 			gc.collect()
-			print("2.5")
 
 			# Open socket connection
 			addr = socket.getaddrinfo(host, port)[0][-1]
 			sock = socket.socket()
 			sock.settimeout(10)
 			sock.connect(addr)
-			print("2.75")
-
 			sock.send(request.encode())
 
-			print("3")
 
 			response = b""
 			while True:
@@ -156,7 +150,6 @@ class Webserver():
 				if not chunk:
 					break
 				response += chunk
-			print("4")
 
 			response_str = response.decode()
 			headers, body = response_str.split("\r\n\r\n", 1)

@@ -1,6 +1,6 @@
 from _thread import allocate_lock
 from time import ticks_ms, ticks_diff
-from machine import reset
+from machine import reset, WDT
 from Locker import ConditionalLock
 
 class Periodic():
@@ -91,6 +91,7 @@ class WatchDog():
 		self.stop_routine = stop_routine
 		self.last_updates = {}  # Dictionary to track last update per thread
 		self.__lock = allocate_lock()
+		self.wdt = WDT(timeout = 8388)
 
 	def kill(self):
 		"""
@@ -121,6 +122,10 @@ class WatchDog():
 				return
 			if self.last_updates.get(thread_id, 0) >= 0:
 				self.last_updates[thread_id] = ticks_ms()
+			self.wdt.feed()
+
+	def update_WDT(self):
+		self.wdt.feed()
 
 	def running(self):
 		"""
