@@ -261,7 +261,7 @@ class AnimationBank():
 		if amount is None:
 			amount = random.randint(1,3)
 		for i in range(amount):
-			State.trigger_animation({'eye_open': random.randint(0,4)//10, 'y': saved_state['y']+20,"value": 0.1}, random.randint(1500,3000), Time_Profiles.ease_in)
+			State.trigger_animation({'eye_open': random.randint(0,4)//10, 'y': saved_state['y']+20,"value": min(0.1, saved_state['value'])}, random.randint(1500,3000), Time_Profiles.ease_in)
 			State.trigger_animation({'eye_open': saved_state['eye_open'], 'y': saved_state['y'], "value": saved_state['value']}, 100, Time_Profiles.ease_out)
 			if (i+1) < amount:
 				State.trigger_wait_animation(random.randint(500, 1500))
