@@ -18,7 +18,7 @@ from Webserver import Webserver, Secrets, Local_Server
 import tft_config
 
 TOGGLE_TIME = 1500
-VERSION = "1.1.7"
+VERSION = "1.1.7-2"
 
 def file_exists(filepath):
     try:
@@ -113,7 +113,7 @@ class main_system():
 		OTA = senko.Senko(
 			user="coencoensmeets",
 			repo="Maja-Pico-code",
-			branch="feature/Bug_fixes",
+			branch="feature/Bug_Fixes",
 			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
 			debug = True,
 			working_dir = None

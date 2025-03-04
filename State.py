@@ -346,9 +346,10 @@ class State():
 		except OSError as e:
 			print("state.json file does not exist, skipping removal.")
 		gc.collect()
+		state = self.get_final_state(dont_lock=True)
 		with open('state.json', 'w') as file:
-			json.dump(self.__current_status, file)
-		print(f"Saved state: {self.__current_status}")
+			json.dump(state, file)
+		print(f"Saved state: {state}")
 		print(f"""Time to save: {ticks_diff(ticks_ms(), time_start)}""")
 	
 	def load_state(self, reset=True):
