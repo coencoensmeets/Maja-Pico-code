@@ -37,7 +37,6 @@ class main_system():
 		self.safety_switch = safety_switch
 		gc.collect()
 		self.dht20 = climate_sensor(scl=1, sda=0, rolling_avg_factor=1e3)
-		self.WD = WatchDog(30e3, stop_routine=self.stop_routine)
 
 		gc.collect()
 		USER_ID, SSID, PASSWORD = Secrets().get_secrets()
@@ -46,6 +45,7 @@ class main_system():
 			self.state.load_state(reset=False)
 			self.state.draw_state()
 			Local_Server(self.LEDS)
+		self.WD = WatchDog(30e3, stop_routine=self.stop_routine)
 		self.ws = Webserver(user_id=USER_ID, ssid = SSID, password=PASSWORD, base = "https://thomasbendington.pythonanywhere.com", version = VERSION)
 
 		self.state_sync = StateSync(USER_ID, self.LEDS, self.state)

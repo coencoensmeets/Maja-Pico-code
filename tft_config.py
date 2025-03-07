@@ -21,10 +21,13 @@ TALL = 1
 
 SCREEN_SIZE = (240, 240)
 
+def rgb_to_rgb565(r, g, b):
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
+
 def config(rotation=1, buffer_size=0, options=0):
     """Configure the display and return an instance of gc9a01.GC9A01."""
 
-    spi = SPI(1, baudrate=100000000, sck=Pin(SCL_PIN), mosi=Pin(SDA_PIN))
+    spi = SPI(1, baudrate=30000000, sck=Pin(SCL_PIN), mosi=Pin(SDA_PIN), polarity=0, phase=0)
     return gc9a01.GC9A01(
         spi,
         240,

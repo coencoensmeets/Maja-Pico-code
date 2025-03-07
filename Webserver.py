@@ -379,6 +379,7 @@ class Local_Server():
 			self.Lights.set_hsv((230, 1, 1))
 
 		while True:
+
 			conn, addr = s.accept()
 			print('Got a connection from %s' % str(addr))
 			request = conn.recv(1024)
@@ -413,15 +414,8 @@ class Local_Server():
 						self.show_page(conn, html_success)
 						ws = Webserver(user_id=user_id, ssid=ssid, password=password)
 						ws.connect()
-						if ws.isconnected():
-							print("Connected successfully")
-							Secrets().save_secrets(json_dict)
-							self.blink(120)
-							machine.reset()
-							break
-						else:
-							print("Failed to connect")
-							self.blink(0)
+						Secrets().save_secrets(json_dict)
+						machine.reset()
 
 	def show_page(self, conn, html):
 		"""

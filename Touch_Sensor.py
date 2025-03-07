@@ -108,7 +108,7 @@ class TouchManager:
 		"""
 		Initializes the TouchManager with two touch buttons, one for the left and one for the right.
 		"""
-		self.left_button = TouchButton(18)  # Initialize left button
+		self.left_button = TouchButton(17)  # Initialize left button
 		self.right_button = TouchButton(19)  # Initialize right button
 		self.was_holding_both = False  # Track if previously holding both
 

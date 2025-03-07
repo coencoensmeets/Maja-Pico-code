@@ -30,7 +30,7 @@ def connect_normal():
 	print("Connecting to network")
 
 	start_time = time.time()
-	while not wlan.isconnected() and time.time() - start_time < 100:
+	while not wlan.isconnected() and time.time() - start_time < 30:
 		print("Waiting for connection...")
 		time.sleep(2)
 
@@ -45,6 +45,8 @@ def connect_normal():
 		# machine.reset()
 	time.sleep(2)
 	wlan.disconnect()
+	wlan.active(False)
+	print("Disconnected from network")
 
 def main_thread():
 	connect_normal()
@@ -77,10 +79,31 @@ class test_lock():
 				time.sleep(2)
 		print("Second thread done")
 
-test = test_lock()
-_thread.start_new_thread(test.first_thread, ())
-time.sleep(1)
-test.second_thread()
-time.sleep(10)
+def rgb_to_rgb565(r, g, b):
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
+
+class test_screen():
+	def __init__(self)-> None:
+		import tft_config
+		self.tft = tft_config.config(tft_config.TALL)
+		#Todo: Make sure init does not produce white noise but black screen!
+		self.tft.init()
+		self.tft.rotation(2)
+		self.tft.fill(0)
+		rgb = (255, 255, 255)
+		for i in range(255, 0, -1):
+			rgb = (i, i, i)
+			print(f"Rgb: {rgb}")
+			self.tft.fill_rect(70, 120-50, 100, 100, rgb_to_rgb565(*rgb))
+			time.sleep_ms(100)
+
+
+# test = test_lock()
+# _thread.start_new_thread(test.first_thread, ())
+# time.sleep(1)
+# test.second_thread()
+# time.sleep(10)
 # _thread.start_new_thread(second_thread, ())
-# main_thread()
+main_thread()
+
+# test = test_screen()
