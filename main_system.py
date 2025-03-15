@@ -113,8 +113,10 @@ class main_system():
 		OTA = senko.Senko(
 			user="coencoensmeets",
 			repo="Maja-Pico-code",
-			branch="feature/Bug_Fixes",
-			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
+			branch="feature/develop",
+			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", 
+					"State.py", "tft_config.py", "Locker.py", "Timers.py", 
+					"Touch_Sensor.py", "Webserver.py"],
 			debug = True,
 			working_dir = None
 		)
@@ -268,5 +270,5 @@ class main_system():
 		print("Memory free:", gc.mem_free(), "bytes")
 
 if __name__ == '__main__':
-	system = main_system(safety_switch=False)
+	system = main_system(safety_switch=True)
 	system.start_threads()
