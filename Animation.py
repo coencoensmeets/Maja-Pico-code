@@ -368,6 +368,11 @@ class Emotion:
 		if hasattr(self, f'_update_parameters') and callable(getattr(self, f'_update_parameters')):
 			getattr(self, f'_update_parameters')()
 
+	def trigger_standard_face(self):
+		if hasattr(self.State.Emotion.emotion, f'_standard_face') and callable(getattr(self.State.Emotion.emotion, f'_standard_face')):
+			print(f"TESSTTTTT")
+			getattr(self.State.Emotion.emotion, f'_standard_face')()
+
 	def check_triggers(self):
 		"""
 		Checks and executes triggers based on their change functions.
@@ -387,6 +392,7 @@ class Emotion:
 		"""
 		tired_addition = int(1000 * (1 / (1 + exp(-0.1 * (self.tired_value - 80)))))
 		self.State.trigger_animation({'x': random.randint(100, 140), 'y': random.randint(100, 140)}, random.randint(500+tired_addition, 1500+tired_addition) + tired_addition, Time_Profiles.ease_in_out, dont_lock=True)
+	
 	def trigger_background(self):
 		"""
 		Triggers a background animation.
@@ -416,10 +422,14 @@ class Happy(Emotion):
 	def __init__(self, State, social_value=50, tired_value=50):
 		super().__init__(State, social_value, tired_value)
 		self.name = "happy"
+		
+		self._standard_face(force=True)
+		self.State.trigger_animation({"y": 120,"hue": 50, "saturation": 1, "value": 1}, 2000, Time_Profiles.ease_in_out, force=True)
 
-		self.State.trigger_animation({'y': 120, 'eye_open': 1, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.0, 
-								'smile': 1, 'smirk': 0, 'cheeks': 0, 'mouth_width': 40, 'yawn': 0,
-								"hue": 50, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out, force=True)
+	def _standard_face(self, force=False):
+		self.State.trigger_animation({'eye_open': 1, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.0, 
+								'smile': 1, 'smirk': 0, 'cheeks': 0, 'mouth_width': 40, 'yawn': 0}, 
+								3000, Time_Profiles.ease_in_out, force=force)
 
 	def _trigger_background(self):
 		if self.tired_value < 0.8:
@@ -441,9 +451,13 @@ class Angry(Emotion):
 		super().__init__(State, social_value, tired_value)
 		self.name = "angry"
 
+		self._standard_face(force=True)
+		self.State.trigger_animation({"hue": 0, "saturation": 1, "value": 1}, 2000, Time_Profiles.ease_in_out, force=True)
+
+	def _standard_face(self, force=False):
 		self.State.trigger_animation({'eye_open': 0.8, 'eyebrow_angle': 1.0, 'under_eye_lid': 0.3, 
-								'cheeks' : 0, 'smile': -1, 'smirk': 0, 'mouth_width': 40, 'yawn': 0,
-								"hue": 0, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out, force=True)
+								'cheeks' : 0, 'smile': -1, 'smirk': 0, 'mouth_width': 40, 'yawn': 0,}, 
+								3000, Time_Profiles.ease_in_out, force=force)
 
 	def _trigger_face_move(self):
 		tired_addition = int(1000 * (1 / (1 + exp(-0.1 * (self.tired_value - 80)))))
@@ -466,10 +480,14 @@ class Sad(Emotion):
 		super().__init__(State, social_value, tired_value)
 		self.name = "sad"
 
-		self.State.trigger_animation({'y': 140, 'eye_open': 0.65, 'eyebrow_angle': -1.0, 'under_eye_lid': 0.0, 
-								'cheeks' : 0, 'smile': -1, 'smirk': 0, 'mouth_width': 40, 'yawn': 0, 
-								"hue": 240, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out, force=True)
 		self.update_parameters()
+		self._standard_face(force=True)
+		self.State.trigger_animation({"y": 140,"hue": 240, "saturation": 1, "value": 1}, 2000, Time_Profiles.ease_in_out, force=True)
+
+	def _standard_face(self, force=False):
+		self.State.trigger_animation({'eye_open': 0.65, 'eyebrow_angle': -1.0, 'under_eye_lid': 0.0, 
+								'cheeks' : 0, 'smile': -1, 'smirk': 0, 'mouth_width': 40, 'yawn': 0}, 
+								3000, Time_Profiles.ease_in_out, force=force)
 
 	def _update_parameters(self):
 		self.triggers['background'].change_function = lambda t: 1e-2*t**2
@@ -516,18 +534,26 @@ class Okay(Emotion):
 		super().__init__(State, social_value, tired_value)
 		self.name = "okay"
 
+		self._standard_face(force=True)
+		self.State.trigger_animation({"hue": 120, "saturation": 1, "value": 0}, 2000, Time_Profiles.ease_in_out, force=True)
+
+	def _standard_face(self, force=False):
 		self.State.trigger_animation({'eye_open': 1, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.4, 
-								'smile': 0,'cheeks' : 0, 'smirk': 0, 'mouth_width': 55, 'yawn': 0,
-								"hue": 120, "saturation": 1, "value": 0}, 3000, Time_Profiles.ease_in_out, force=True)
+								'smile': 0,'cheeks' : 0, 'smirk': 0, 'mouth_width': 55, 'yawn': 0}, 
+								3000, Time_Profiles.ease_in_out, force=force)
 
 class Horny(Emotion):
 	def __init__(self, State, social_value=50, tired_value=50):
 		super().__init__(State, social_value, tired_value)
 		self.name = "horny"
 
+		self._standard_face()
+		self.State.trigger_animation({"hue": 275, "saturation": 1, "value": 1}, 2000, Time_Profiles.ease_in_out, force=True)
+		
+	def _standard_face(self):
 		self.State.trigger_animation({'eye_open': 0.7, 'eyebrow_angle': 0.3, 'under_eye_lid': 0.2, 
-									'smile': 1, 'smirk': random.choice([-1,1]), 'cheeks' : 0, 'mouth_width': 60, 
-									"hue": 275, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out, force=True)
+									'smile': 1, 'smirk': random.choice([-1,1]), 'cheeks' : 0, 'mouth_width': 60}, 
+									3000, Time_Profiles.ease_in_out, force=True)
 
 	def _trigger_background(self):
 		Options = {'wink': 0.2, 'shake_yes': 0.05, 'dance': 0.05, 'eye_brows_raise': 0.3, 'fast_blinking': 0.2, 'kiss': 0.2}
@@ -552,9 +578,12 @@ class Love(Emotion):
 		super().__init__(State, social_value, tired_value)
 		self.name = "love"
 
+		self._standard_face(force=True)
+		self.State.trigger_animation({"hue": 300, "saturation": 1, "value": 1}, 2000, Time_Profiles.ease_in_out, force=True)
+
+	def _standard_face(self, force=False):
 		self.State.trigger_animation({'eye_open': 1.0, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.5, 
-								'smile': 1, 'cheeks' : 1, 'smirk': 0, 'mouth_width': 40, 'yawn': 0, 
-								"hue": 300, "saturation": 1, "value": 1}, 3000, Time_Profiles.ease_in_out, force=True)
+								'smile': 1, 'cheeks' : 1, 'smirk': 0, 'mouth_width': 40, 'yawn': 0, }, 3000, Time_Profiles.ease_in_out, force=force)
 
 	def _trigger_background(self):
 		Options = {'fast_blinking': 0.2, 'wink': 0.2, 'kiss': 0.25, 'shake_yes': 0.1, 'dance': 0.1, 'hearts_flying': 0.25}
@@ -584,10 +613,12 @@ class Sleeping(Emotion):
 		super().__init__(State, social_value, tired_value)
 		self.name = "sleeping"
 
-		self.State.trigger_animation({'x': 120, "y": 150,
-								'eye_open': 0.15, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.1, 
-								'smile': 0,'cheeks' : 0, 'smirk': 0, 'mouth_width': 40, 'yawn': 0,
-								"hue": 0, "saturation": 0, "value": 0}, 3000, Time_Profiles.ease_in_out, force=True)
+		self._standard_face(force=True)
+		self.State.trigger_animation({'x': 120, "y": 150,"hue": 0, "saturation": 0, "value": 0}, 2000, Time_Profiles.ease_in_out, force=True)
+
+	def _standard_face(self, force=False):
+		self.State.trigger_animation({'eye_open': 0.15, 'eyebrow_angle': 0.0, 'under_eye_lid': 0.1, 
+								'smile': 0,'cheeks' : 0, 'smirk': 0, 'mouth_width': 40, 'yawn': 0}, 3000, Time_Profiles.ease_in_out, force=force)
 		
 	def _update_parameters(self):
 		self.triggers['blink'].change_function = lambda t: 0

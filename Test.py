@@ -101,7 +101,7 @@ class test_screen():
 # test = test_lock()
 # _thread.start_new_thread(test.first_thread, ())
 # time.sleep(1)
-# test.second_thread()
+# test.second_thread()|
 # time.sleep(10)
 # _thread.start_new_thread(second_thread, ())
 main_thread()

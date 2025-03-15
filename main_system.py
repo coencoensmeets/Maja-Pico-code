@@ -207,6 +207,7 @@ class main_system():
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
 		update_periodic = Periodic(func=self.__update, freq=1/(60*10))
 		save_state_periodic = Periodic(func=self.state.check_save_state, freq=1/(10))
+		standard_face_periodic = Periodic(func=self.state.Emotion.emotion.trigger_standard_face, freq=1/(60))
 
 		get_failed_count = 0
 
@@ -254,6 +255,7 @@ class main_system():
 
 			animation_periodic.call_func()
 			save_state_periodic.call_func()
+			standard_face_periodic.call_func()
 
 			t_end = ticks_ms()
 			if (ticks_diff(t_end, t_start) > 200):
