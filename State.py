@@ -77,6 +77,7 @@ class Emotion_Manager():
 			changed = True
 
 		if changed:
+			self.State.save_status = True
 			print(f"Changed to: {self.emotion}, Social: {self.emotion.social_value}, Tired: {self.emotion.tired_value}")
 
 class StateSync():
@@ -113,6 +114,7 @@ class StateSync():
 
 					if (self.state.face.is_on != result['screen_data']['screen_on']):
 						self.state.face.screen_turn(result['screen_data']['screen_on'])
+						self.state.save_status = True
 						
 					result_time = datetime.fromisoformat(result['light_data']['time'])
 					if result_time > self.time_saved:
@@ -163,6 +165,7 @@ class StateSync():
 
 		if changes != {}:
 			print(f"GET changes; {changes}")
+			self.state.save_status = True
 			self.state.trigger_animation(changes, CHANGE_TIME, Time_Profiles.ease_in, force=True)
 		
 	def __change_face(self, result):
@@ -198,6 +201,7 @@ class State():
 								'eye_open': 0.1, 'eyebrow_angle': 0, 'under_eye_lid': 0.4, 'left_right': 0, 
 						   		'mouth_width': 40, 'mouth_y':0, 'smile': 0, 'cheeks': 0, 'smirk': 0,
 								"hue": 0, "saturation": 1, "value": 0}
+		self.save_status = True
 		
 		self.__particles_queue = Particle_Queue()
 		self.update_status_lamp()
@@ -324,22 +328,29 @@ class State():
 				return
 			return self.__animator.get_final_time()
 		
+	def check_save_state(self, dont_lock = False):
+		with ConditionalLock(self.__lock, not dont_lock) as aquired:
+			if not aquired:
+				return
+			print(f"Save status: {self.save_status}")
+			if self.save_status:
+				self.save_state()
+				self.save_status = False
+		
 	def save_state(self):
+		time_start = ticks_ms()
 		self.update_status_lamp()
 		gc.collect()
-		print("Waiting")
-		sleep(2)
-		print(f"Test: {self.__current_status}")
 		try:
 			os.remove('state.json')
 		except OSError as e:
 			print("state.json file does not exist, skipping removal.")
-		print("Waiting")
-		sleep(2)
 		gc.collect()
+		state = self.get_final_state(dont_lock=True)
 		with open('state.json', 'w') as file:
-			json.dump(self.__current_status, file)
-		print(f"Saved state: {self.__current_status}")
+			json.dump(state, file)
+		print(f"Saved state: {state}")
+		print(f"""Time to save: {ticks_diff(ticks_ms(), time_start)}""")
 	
 	def load_state(self, reset=True):
 		if reset:

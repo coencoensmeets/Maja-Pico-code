@@ -18,26 +18,14 @@ from Webserver import Webserver, Secrets, Local_Server
 import tft_config
 
 TOGGLE_TIME = 1500
-VERSION = "1.1.6.1"
+VERSION = "1.1.7-2"
 
-class ResetDetector():
-	def __init__(self):
-		self.reset = False
-	
-	def check(self):
-		try:
-			with open('reset.json', 'r') as file:
-				file_result = json.load(file).copy()
-				self.reset = file_result.get('reset', False)
-				os.remove('reset.json')
-		except OSError:
-			pass
-		return self.reset
-
-	def set_reset(self):
-		with open('reset.json', 'w') as file:
-			json.dump({'reset': True}, file)
-		print("Hard reset set!")
+def file_exists(filepath):
+    try:
+        os.stat(filepath)
+        return True
+    except OSError:
+        return False
 
 class main_system():
 	def __init__(self, safety_switch=True):
@@ -49,7 +37,6 @@ class main_system():
 		self.safety_switch = safety_switch
 		gc.collect()
 		self.dht20 = climate_sensor(scl=1, sda=0, rolling_avg_factor=1e3)
-		self.WD = WatchDog(30e3, stop_routine=self.stop_routine)
 
 		gc.collect()
 		USER_ID, SSID, PASSWORD = Secrets().get_secrets()
@@ -58,6 +45,7 @@ class main_system():
 			self.state.load_state(reset=False)
 			self.state.draw_state()
 			Local_Server(self.LEDS)
+		self.WD = WatchDog(30e3, stop_routine=self.stop_routine)
 		self.ws = Webserver(user_id=USER_ID, ssid = SSID, password=PASSWORD, base = "https://thomasbendington.pythonanywhere.com", version = VERSION)
 
 		self.state_sync = StateSync(USER_ID, self.LEDS, self.state)
@@ -96,7 +84,6 @@ class main_system():
 			self.WD.update_WDT()
 			print("Ended safe state\n Start set reset")
 			print(f"Memory: {micropython.mem_info(1)}")
-			ResetDetector().set_reset()
 			print(f"Killing all threads! (wait 2s)")
 			sleep_ms(2000)
 			if self.safety_switch:
@@ -106,8 +93,8 @@ class main_system():
 	def __startup(self):
 		# print("--- Startup ---")
 		gc.collect()
-		reset = ResetDetector().check()
-		# print(f"Reset (Not putting cable in!): {reset}\n")
+		reset = file_exists("state.json")
+		print(f"Reset: {reset}\n")
 		self.state.load_state(reset=reset)
 		if not reset:
 			self.state.draw_state()
@@ -126,8 +113,10 @@ class main_system():
 		OTA = senko.Senko(
 			user="coencoensmeets",
 			repo="Maja-Pico-code",
-			branch="feature/Tired",
-			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", "State.py", "tft_config.py"],
+			branch="feature/develop",
+			files = ["main_system.py", "Animation.py", "Particle.py", "Screen.py", 
+					"State.py", "tft_config.py", "Locker.py", "Timers.py", 
+					"Touch_Sensor.py", "Webserver.py"],
 			debug = True,
 			working_dir = None
 		)
@@ -148,6 +137,7 @@ class main_system():
 		touch_state = {"left": 0, "right": 0}  # Initialize with 0 for none
 
 		while self.WD.running():
+			t_start = ticks_ms()
 			up_periodic.call_func()
 			self.WD.update('sensor')
 			touch_manager.update_and_manage_state(touch_state)
@@ -158,6 +148,7 @@ class main_system():
 				self.state.draw_state({'hue': colour[0], 'saturation': colour[1], 'value': colour[2]})
 				self.state_sync.queue.add({'hue': colour[0], 'saturation': colour[1], 'value': colour[2]})
 				self.state_sync.set_block_get(False)
+				self.state.save_status = True
 
 			if self.state.is_animation_active():
 				self.state.draw_state()
@@ -174,6 +165,7 @@ class main_system():
 					print("Light action: Turn off")
 					self.state.trigger_animation({"value": 0}, TOGGLE_TIME, Time_Profiles.ease_out, force=True)
 					self.state_sync.queue.add({'value': 0})
+				self.state.save_status = True
 			elif touch_state['left'] > 1000: #State: Change colour (Hold right)
 				print("Light action: Change colour")
 				if not Hue_Changing:
@@ -183,10 +175,11 @@ class main_system():
 					if colour[1] != 1 or colour[2] != 1:
 						self.state.trigger_animation({"saturation": 1, "value": 1}, TOGGLE_TIME, Time_Profiles.ease_in, force=True)
 				self.LEDS.increase_hue(360/4)
-			elif touch_state['right'] == -2: #State: Change brightness (Double tap right)
-				print("Light action: Change brightness")
+			elif touch_state['right'] == -2: #State: Change screen (Double touch Left)
+				print("Light action: Change screen")
 				self.state.face.screen_toggle()
 				self.state_sync.queue.add({'screen_on': 0})
+				self.state.save_status = True
 			elif touch_state['right'] == -5: #State: Reset (Coding) (Hold left)
 				print("Resetting secrets!")
 				Secrets().reset_secrets()
@@ -202,8 +195,8 @@ class main_system():
 				Lights(N=8, brightness=1, pin=machine.Pin(2)).set_hsv((0,1,1))
 				self.WD.kill()
 			
-			# if (ticks_diff(ticks_ms(), t_start) > 20):
-			# 	print(f"Time taken (Sensor loop): {ticks_diff(ticks_ms(), t_start)}")
+			if (ticks_diff(ticks_ms(), t_start) > 100):
+				print(f"Time taken (Sensor loop): {ticks_diff(ticks_ms(), t_start)}")
 
 		print("Sensor thread is going to kill the server thread!")
 		self.WD.kill()
@@ -212,9 +205,11 @@ class main_system():
 		# print("Start server thread")
 		dht20_periodic = Periodic(func=self.dht20.update_server, freq=1/(60), webserver=self.ws)
 		light_periodic = Periodic(func=self.state_sync.get, freq=1, webserver=self.ws)
-		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1)
+		animation_periodic = Periodic(func=self.state.check_animation_triggers, freq=1/2)
 		garbage_periodic = Periodic(func=gc.collect, freq=1/5)
-		update_period = Periodic(func=self.__update, freq=1/(24*60*60))
+		update_periodic = Periodic(func=self.__update, freq=1/(60*10))
+		save_state_periodic = Periodic(func=self.state.check_save_state, freq=1/(10))
+		standard_face_periodic = Periodic(func=self.state.Emotion.emotion.trigger_standard_face, freq=1/(60))
 
 		get_failed_count = 0
 
@@ -229,7 +224,7 @@ class main_system():
 				if not Success:
 					self.WD.kill()
 			
-			update_period.call_func()
+			update_periodic.call_func()
 
 			server_return = dht20_periodic.call_func(force_update=dht20_periodic.bypass_timing)
 			if server_return:
@@ -261,9 +256,12 @@ class main_system():
 				self.state_sync.post(webserver=self.ws)
 
 			animation_periodic.call_func()
+			save_state_periodic.call_func()
+			standard_face_periodic.call_func()
 
 			t_end = ticks_ms()
-			print(f"Time taken (Server loop): {ticks_diff(t_end, t_start)}")
+			if (ticks_diff(t_end, t_start) > 200):
+				print(f"Time taken (Server loop): {ticks_diff(t_end, t_start)}")
 		print("Server thread is going to kill the sensor thread!")
 		self.WD.kill()
 
@@ -272,5 +270,5 @@ class main_system():
 		print("Memory free:", gc.mem_free(), "bytes")
 
 if __name__ == '__main__':
-	system = main_system(safety_switch=False)
+	system = main_system(safety_switch=True)
 	system.start_threads()

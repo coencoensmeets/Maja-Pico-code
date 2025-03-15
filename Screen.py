@@ -3,11 +3,11 @@ from math import cos, sin, pi
 from shapeDrawer import shapeDrawer
 import gc
 import micropython as mp
-from tft_config import SCREEN_SIZE
+from tft_config import SCREEN_SIZE, rgb_to_rgb565
 from Particle import *
 from time import sleep
 
-COLOURS = {'BLACK': 0x0000, 'WHITE': 0xFFFF, 'RED': 0xF800, 'GREEN': 0x07E0, 'BLUE': 0x001F, 'CYAN': 0x07FF, 'MAGENTA': 0xF81F, 'YELLOW': 0xFFE0, 'PINK': 0xF810}
+COLOURS = {'BLACK': 0x0000, 'WHITE': rgb_to_rgb565(230, 230, 230), 'RED': 0xF800, 'GREEN': 0x07E0, 'BLUE': 0x001F, 'CYAN': 0x07FF, 'MAGENTA': 0xF81F, 'YELLOW': 0xFFE0, 'PINK': 0xF810}
 
 def bound_to_rect(bound):
 	# TODO: add_bound in c function draw_boundary
@@ -91,7 +91,9 @@ class Screen():
 		self.__bounding = {}
 
 		if self.__make_black:
+			print("Test")
 			self.__screen_drawer.draw_circle((SCREEN_SIZE[0]//2, SCREEN_SIZE[1]//2), SCREEN_SIZE[0]//2, 0, key='black')
+			self.tft.fill_circle(SCREEN_SIZE[0]//2, SCREEN_SIZE[1]//2, SCREEN_SIZE[0]//2, 0)
 			self.__make_black = False
 
 		if True or any(key in ['eye_open', 'eyebrow_angle', 'under_eye_lid', 'left_right', 'x', 'y'] for key in newstatus.keys()):

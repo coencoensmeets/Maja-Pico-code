@@ -48,13 +48,6 @@ class TouchButton:
 	def update_state(self):
 		"""
 		Updates the state of the touch button based on the current and previous readings.
-
-		Returns:
-			int: The state of the button:
-				0 for no action,
-				a positive integer for the duration of a hold in milliseconds,
-				-1 for a single tap,
-				-2 for a double tap.
 		"""
 		current_time = ticks_ms()
 		self.current_button_state = self.button.value()
@@ -87,9 +80,14 @@ class TouchButton:
 		Returns the current state of the button.
 
 		Returns:
-			int: The current state of the button as determined by update_state().
+			int: The state of the button:
+				0 for no action,
+				a positive integer for the duration of a hold in milliseconds,
+				-1 for a single tap,
+				-2 for a double tap.
 		"""
-		return self.update_state()
+		self.update_state()
+		return self.state
 
 class TouchManager:
 	"""
@@ -110,7 +108,7 @@ class TouchManager:
 		"""
 		Initializes the TouchManager with two touch buttons, one for the left and one for the right.
 		"""
-		self.left_button = TouchButton(18)  # Initialize left button
+		self.left_button = TouchButton(17)  # Initialize left button
 		self.right_button = TouchButton(19)  # Initialize right button
 		self.was_holding_both = False  # Track if previously holding both
 
@@ -125,12 +123,16 @@ class TouchManager:
 		"""
 		self.left_button.get_state()
 		self.right_button.get_state()
+		state_dict['left'] = 0
+		state_dict['right'] = 0
 
 		# Check if previously holding both and now one of the sides is not holding
 		if self.was_holding_both and (self.left_button.state <= 0 or self.right_button.state <= 0):
 			self.left_button.reset()  # Reset left button state
 			self.right_button.reset()  # Reset right button state
 			self.was_holding_both = False  # Update the flag since we reset the states
+			state_dict['left'] = 0
+			state_dict['right'] = 0
 			return state_dict
 
 		if self.left_button.state > 0 and self.right_button.state > 0:

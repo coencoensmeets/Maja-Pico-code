@@ -122,7 +122,7 @@ class WatchDog():
 				return
 			if self.last_updates.get(thread_id, 0) >= 0:
 				self.last_updates[thread_id] = ticks_ms()
-			self.wdt.feed()
+			self.update_WDT()
 
 	def update_WDT(self):
 		self.wdt.feed()
