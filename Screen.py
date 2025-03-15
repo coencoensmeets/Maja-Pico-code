@@ -3,24 +3,31 @@ from math import cos, sin, pi
 from shapeDrawer import shapeDrawer
 import gc
 import micropython as mp
-from tft_config import SCREEN_SIZE
+from tft_config import SCREEN_SIZE, rgb_to_rgb565
 from Particle import *
 from time import sleep
 
-COLOURS = {'BLACK': 0x0000, 'WHITE': 0xFFFF, 'RED': 0xF800, 'GREEN': 0x07E0, 'BLUE': 0x001F, 'CYAN': 0x07FF, 'MAGENTA': 0xF81F, 'YELLOW': 0xFFE0, 'PINK': 0xF810}
+COLOURS = {'BLACK': 0x0000, 'WHITE': rgb_to_rgb565(230, 230, 230), 'RED': 0xF800, 'GREEN': 0x07E0, 'BLUE': 0x001F, 'CYAN': 0x07FF, 'MAGENTA': 0xF81F, 'YELLOW': 0xFFE0, 'PINK': 0xF810}
 
 def bound_to_rect(bound):
 	# TODO: add_bound in c function draw_boundary
-	return (clamp_coordinates(bound[0][0]-2, bound[0][1]-2), (min(bound[1][0]-bound[0][0]+4, SCREEN_SIZE[0]-bound[0][0]+1), min(bound[1][1]-bound[0][1]+4, SCREEN_SIZE[1]-bound[0][1]+1)))
+	return (clamp_coordinates(bound[0][0]-1, bound[0][1]-1), (min(bound[1][0]-bound[0][0]+4, SCREEN_SIZE[0]-bound[0][0]+1), min(bound[1][1]-bound[0][1]+4, SCREEN_SIZE[1]-bound[0][1]+1)))
 
 def clamp_coordinates(x, y):
-	return (max(min(x, SCREEN_SIZE[0]-1), 0), max(min(y, SCREEN_SIZE[1]-1), 0))
+	return (max(min(x, SCREEN_SIZE[0]+1), 0), max(min(y, SCREEN_SIZE[1]+1), 0))
 
 def calculate_bound(points, offset = (0,0)):
 	min_x = int(min(points, key=lambda x: x[0])[0]+offset[0])
 	min_y = int(min(points, key=lambda x: x[1])[1]+offset[1])
 	max_x = int(max(points, key=lambda x: x[0])[0]+offset[0])
 	max_y = int(max(points, key=lambda x: x[1])[1]+offset[1])
+	return ((min_x, min_y), (max_x, max_y))
+
+def overwrite_bound(bound, points, offset = (0,0)):
+	min_x = min(int(min(points, key=lambda x: x[0])[0]+offset[0]), bound[0][0][0])
+	min_y = min(int(min(points, key=lambda x: x[1])[1]+offset[1]), bound[0][0][1])
+	max_x = max(int(max(points, key=lambda x: x[0])[0]+offset[0]), bound[0][1][0])
+	max_y = max(int(max(points, key=lambda x: x[1])[1]+offset[1]), bound[0][1][1])
 	return ((min_x, min_y), (max_x, max_y))
 
 class Screen():
@@ -54,6 +61,7 @@ class Screen():
 		else:
 			self.tft.off()
 			self.is_on = False
+			self.make_black()
 
 	def screen_toggle(self):
 		if self.is_on:
@@ -67,7 +75,7 @@ class Screen():
 				len(particles) == 0 and 
 				not any(key in newstatus.keys() for key in ['left_eye', 'right_eye', 'mouth', 'x', 'y', 
 															'eye_open', 'left_right', 'eyebrow_angle', 'under_eye_lid', 
-															'mouth_width', 'mouth_y', 'smile', 'cheeks'])):
+															'mouth_width', 'mouth_y', 'smile', 'cheeks', 'smirk', 'yawn'])):
 			return
 
 		# todo: The face is always updated. Not only when the face changes. This is not optimal.
@@ -83,14 +91,16 @@ class Screen():
 		self.__bounding = {}
 
 		if self.__make_black:
+			print("Test")
 			self.__screen_drawer.draw_circle((SCREEN_SIZE[0]//2, SCREEN_SIZE[1]//2), SCREEN_SIZE[0]//2, 0, key='black')
+			self.tft.fill_circle(SCREEN_SIZE[0]//2, SCREEN_SIZE[1]//2, SCREEN_SIZE[0]//2, 0)
 			self.__make_black = False
 
 		if True or any(key in ['eye_open', 'eyebrow_angle', 'under_eye_lid', 'left_right', 'x', 'y'] for key in newstatus.keys()):
 			self.__draw_eyes(status)
 	
 			
-		if True or any(key in ['x', 'y', 'mouth_width', 'mouth_y', 'smile', 'smirk'] for key in newstatus.keys()):
+		if True or any(key in ['x', 'y', 'mouth_width', 'mouth_y', 'smile', 'smirk', 'yawn'] for key in newstatus.keys()):
 			self.__draw_mouth(status)
 
 		if True or any('cheeks' in newstatus.keys()):
@@ -101,6 +111,8 @@ class Screen():
 
 		# gc.collect()
 		try:
+			del self.bitmap
+			gc.collect()
 			self.bitmap = self.__screen_drawer.get_bitmap((COLOURS['BLACK'], COLOURS['WHITE'], COLOURS['PINK'], COLOURS['BLUE']))
 			# print(f"Bitmap: {len(self.bitmap['BOUNDING'])}")
 			if len(self.bitmap['BOUNDING']) > 0:
@@ -153,10 +165,10 @@ class Screen():
 			self.__bounding['right_eye'] = [calculate_bound(right_eye_coord, offset = ((status['x']+45)-self.eye_width//2,(status['y']-65)))]
 			
 	def __draw_mouth(self, status):
-		mouth_coord = [(round(self.mouth_width//2-(status['mouth_width']//2)*(1-status['smirk']*0.5)), round(status['mouth_y']*self.mouth_height//2)), 
-				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.5)), round(status['mouth_y']*self.mouth_height//2)), 
-				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.5)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2)), 
-				 (round(self.mouth_width//2-status['mouth_width']//2*(1-status['smirk']*0.5)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2))]
+		mouth_coord = [(round(self.mouth_width//2-(status['mouth_width']//2)*(1-status['smirk']*0.3)), round(status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.3)), round(status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2+(status['mouth_width']//2)*(1+status['smirk']*0.3)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2)), 
+				 (round(self.mouth_width//2-status['mouth_width']//2*(1-status['smirk']*0.3)), round(self.mouth_height//2+status['mouth_y']*self.mouth_height//2))]
 		
 		mouth_radii = [round(min(status['mouth_width']/2,max(self.mouth_height//4-(status['smile']*self.mouth_height//4)*(1-status['smirk']),0))),
 				round(min(status['mouth_width']/2,max(self.mouth_height//4-status['smile']*self.mouth_height//4*(1+status['smirk']),0))),
@@ -169,7 +181,12 @@ class Screen():
 				1, key='mouth')
 		
 		self.__bounding['mouth'] = [calculate_bound(mouth_coord, offset=(round(status['x']-self.mouth_width//2), status['y']+45))]
-
+		
+		if (status.get('yawn', 0) > 0):
+			self.__screen_drawer.draw_elipse((round(status['x']), round(status['y']+45+(1.25-0.25*status['smile'])*self.mouth_height//4)), (15, round(30*status.get('yawn', 0))), 1, key='mouth')
+			self.__bounding['mouth'] = [overwrite_bound(self.__bounding['mouth'], 
+											  [(-15, -30*status.get('yawn', 0)),
+			  									(15, 30*status.get('yawn', 0))], offset=(round(status['x']), round(status['y']+45+(1.25-0.25*status['smile'])*self.mouth_height//4)))]
 	def __draw_cheeks(self, status):
 		if status['cheeks'] > 0:
 			x_offset = 60

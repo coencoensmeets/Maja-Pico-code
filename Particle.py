@@ -106,3 +106,13 @@ class Tear(Particle):
 		radii = (0, 10, 5, 10)
 		super().__init__(spawn, (15, 2.5/2*15), points, radii)
 		self.velocities = (lambda t: 60, lambda t: sin(t*4+random.choice([0, pi])))
+
+class Z(Particle):
+	def __init__(self, spawn):
+		points = ((-30, -30), (30, -30), 
+			(30, -20), (-10,20), 
+			(30, 20), (30, 30),
+			(-30, 30), (-30, 20), 
+			(10, -20), (-30, -20))
+		radii = (2, 2, 2, 0, 2, 2, 2, 2, 0, 2)
+		super().__init__(spawn, (0,0), points, radii, colour=1)
