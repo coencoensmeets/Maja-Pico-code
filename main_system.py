@@ -18,7 +18,7 @@ from Webserver import Webserver, Secrets, Local_Server
 import tft_config
 
 TOGGLE_TIME = 1500
-VERSION = "1.1.8"
+VERSION = "1.2.1"
 
 def file_exists(filepath):
     try:
